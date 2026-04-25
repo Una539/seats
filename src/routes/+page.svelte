@@ -31,6 +31,7 @@
 	import NameList from '$lib/components/NameList.svelte';
 	import { SeatGridState } from '$lib/stores.svelte';
 	import { exportToXlsx } from '$lib/export';
+	import { localeStore, translations } from '$lib/i18n/index.svelte';
 
 	/** 从文件读取的待分配名单 */
 	let lines: string[] = $state([]);
@@ -43,8 +44,12 @@
 	/** 当前操作模式：fill = 填入/交换，remove = 移除学生 */
 	let mode: 'fill' | 'remove' = $state('fill');
 
+	const i18n = $derived(translations[localeStore.locale]);
+
 	/** 座位网格状态实例，管理所有表格相关操作 */
 	const grid = new SeatGridState();
+
+	localeStore.init();
 
 	/**
 	 * 页面加载时尝试从静态资源加载默认名单
@@ -133,6 +138,10 @@
 		selectedLine = '';
 	}
 
+	function toggleLocale() {
+		localeStore.setLocale(localeStore.locale === 'en' ? 'cn' : 'en');
+	}
+
 	/**
 	 * 过道操作导致学生被清退，将其加回名单
 	 */
@@ -160,17 +169,18 @@
 	<!-- 右侧：固定侧边栏 -->
 	<aside class="sidebar">
 		<div class="sidebar-header">
-			<span class="sidebar-title">名单</span>
+			<span class="sidebar-title">{i18n.sidebar.title}</span>
+			<button class="lang-toggle" onclick={toggleLocale}>{localeStore.locale === 'en' ? '中文' : 'EN'}</button>
 		</div>
 		<!-- 模式切换 -->
 		<div class="mode-bar">
 			<button class="mode-btn" class:active={mode === 'fill'} onclick={() => setMode('fill')}
-				>填座</button
+				>{i18n.modes.fill}</button
 			>
 			<button
 				class="mode-btn mode-btn-remove"
 				class:active={mode === 'remove'}
-				onclick={() => setMode('remove')}>移除</button
+				onclick={() => setMode('remove')}>{i18n.modes.remove}</button
 			>
 		</div>
 		<div class="sidebar-body">
@@ -231,6 +241,7 @@
 	.sidebar-header {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		padding: 12px 16px 10px;
 		border-bottom: 1px solid var(--border);
 		flex-shrink: 0;
@@ -242,6 +253,25 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--text-muted);
+	}
+
+	.lang-toggle {
+		font-size: 11px;
+		font-weight: 500;
+		padding: 2px 6px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--surface);
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition:
+			background var(--duration) var(--ease-out),
+			border-color var(--duration) var(--ease-out);
+	}
+
+	.lang-toggle:hover {
+		background: var(--surface-hover);
+		border-color: var(--border-strong);
 	}
 
 	.sidebar-body {

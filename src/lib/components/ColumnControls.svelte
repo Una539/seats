@@ -26,14 +26,16 @@
 
 <script lang="ts">
 	import type { SeatGridState } from '$lib/stores.svelte';
+	import { localeStore, translations } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		grid: SeatGridState;
-		/** 有学生被设为过道清退时的回调，参数为被清退的姓名数组 */
 		onDisplace: (names: string[]) => void;
 	}
 
 	let { grid, onDisplace }: Props = $props();
+
+	const i18n = $derived(translations[localeStore.locale]);
 
 	function handleToggle(ci: number) {
 		const displaced = grid.toggleAisle(ci);
@@ -46,7 +48,7 @@
 	{#each Array(10), ci (ci)}
 		<button class:aisle={grid.isAisle(ci)} onclick={() => handleToggle(ci)}>
 			<span class="col-num">{ci + 1}</span>
-			<span class="col-label" class:visible={grid.isAisle(ci)}>过道</span>
+			<span class="col-label" class:visible={grid.isAisle(ci)}>{i18n.grid.aisle}</span>
 		</button>
 	{/each}
 </div>

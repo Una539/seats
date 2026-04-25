@@ -27,6 +27,7 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { SeatGridState } from '$lib/stores.svelte';
+	import { localeStore, translations } from '$lib/i18n/index.svelte';
 
 	/** 正在播放交换动画的单元格 key 集合 */
 	const swappingCells = new SvelteSet<string>();
@@ -45,6 +46,8 @@
 	}
 
 	let { grid, mode, selectedLine, onNameReturn, onNameFill }: Props = $props();
+
+	const i18n = $derived(translations[localeStore.locale]);
 
 	/** 委托给状态类处理单元格点击 */
 	function handleCellClick(row: number, col: number) {
@@ -118,7 +121,7 @@
 								class="aisle-cell"
 								class:pending-enable={grid.pendingEnable.has(`0-${ci}`)}
 								rowspan={10}
-								onclick={() => handleCellClick(ri, ci)}>过道</td
+								onclick={() => handleCellClick(ri, ci)}>{i18n.grid.aisle}</td
 							>
 						{/if}
 					{:else}

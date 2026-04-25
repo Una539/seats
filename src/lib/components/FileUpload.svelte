@@ -25,41 +25,39 @@
 -->
 
 <script lang="ts">
+	import { localeStore, translations } from '$lib/i18n/index.svelte';
+
 	interface Props {
-		/** 当前加载的文件名 */
 		fileName: string;
-		/** 名单中的行数 */
 		lineCount: number;
-		/** 错误信息 */
 		error: string;
-		/** 文件上传时的回调 */
 		onFileUpload: (event: Event) => void;
-		/** 随机填入按钮点击时的回调 */
 		onRandomFill: () => void;
-		/** 导出 xlsx 按钮点击时的回调 */
 		onExport: () => void;
 	}
 
 	let { fileName, lineCount, error, onFileUpload, onRandomFill, onExport }: Props = $props();
+
+	const i18n = $derived(translations[localeStore.locale]);
 </script>
 
 <div class="actions">
 	<!-- 文件上传 -->
 	<label class="btn btn-ghost">
-		<span>浏览文件</span>
+		<span>{i18n.sidebar.browseFile}</span>
 		<input type="file" accept=".txt" style="display: none;" onchange={onFileUpload} />
 	</label>
 
 	<!-- 随机填入 — 主操作，深色实底 -->
-	<button class="btn btn-primary" onclick={onRandomFill}>随机填入</button>
+	<button class="btn btn-primary" onclick={onRandomFill}>{i18n.sidebar.randomFill}</button>
 
 	<!-- 导出 -->
-	<button class="btn btn-mid" onclick={onExport}>导出 XLSX</button>
+	<button class="btn btn-mid" onclick={onExport}>{i18n.sidebar.exportXlsx}</button>
 
 	<!-- 文件信息 -->
 	{#if fileName}
 		<p class="meta">
-			<span class="meta-label">待分配</span>
+			<span class="meta-label">{i18n.sidebar.pending}</span>
 			<span class="meta-value">{lineCount}</span>
 		</p>
 	{/if}
