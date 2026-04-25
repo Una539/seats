@@ -1,0 +1,19 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "firefox",
+			"request": "launch",
+			"name": "Launch Firefox with pnpm dev",
+			"url": "http://localhost:5173", // 确保端口与 pnpm dev 输出的一致
+			"webRoot": "${workspaceFolder}",
+			"preLaunchTask": "pnpm dev", // 关键：调试前先执行这个任务
+			"pathMappings": [
+				{
+					"url": "webpack:///src/",
+					"path": "${workspaceFolder}/src/"
+				}
+			]
+		}
+	]
+}

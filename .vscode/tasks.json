@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "pnpm dev",
+			"type": "shell",
+			"command": "pnpm",
+			"args": ["dev"],
+			"isBackground": true, // 关键：告诉 VS Code 这是一个后台持续运行的任务
+			"problemMatcher": {
+				"owner": "custom",
+				"pattern": {
+					"regexp": "^$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "VITE v.* ready in.*", // 根据 Vite 启动日志调整，匹配 "ready" 字样
+					"endsPattern": "Local:.*" // 匹配本地地址出现时，认为服务已就绪
+				}
+			},
+			"presentation": {
+				"reveal": "silent", // 静默运行，不自动弹出终端面板（可选）
+				"panel": "dedicated" // 在专用终端面板运行
+			}
+		}
+	]
+}
