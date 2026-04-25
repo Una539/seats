@@ -36,6 +36,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        env:
+          GITHUB_PAGES: ${{ github.ref == 'refs/heads/main' }}
         run: pnpm build
 
       - name: Upload Pages artifact
