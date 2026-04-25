@@ -25,11 +25,17 @@
 -->
 
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import type { SeatGridState } from '$lib/stores.svelte';
+
+	/** 正在播放交换动画的单元格 key 集合 */
+	const swappingCells = new SvelteSet<string>();
 
 	interface Props {
 		/** 座位网格状态实例 */
 		grid: SeatGridState;
+		/** 当前操作模式：fill = 填入/交换，remove = 移除学生 */
+		mode: 'fill' | 'remove';
 		/** 当前选中的姓名，点击空单元格时会填入 */
 		selectedLine: string;
 		/** 姓名从网格移除时的回调 */
@@ -38,7 +44,7 @@
 		onNameFill: (name: string) => void;
 	}
 
-	let { grid, selectedLine, onNameReturn, onNameFill }: Props = $props();
+	let { grid, mode, selectedLine, onNameReturn, onNameFill }: Props = $props();
 
 	/** 委托给状态类处理单元格点击 */
 	function handleCellClick(row: number, col: number) {
@@ -46,6 +52,25 @@
 		const isDisabled = grid.disabledCells.has(`${row}-${col}`);
 		const isAisle = grid.isAisle(col);
 
+		// ── 移除模式 ──────────────────────────────────────────
+		if (mode === 'remove') {
+			if (!isAisle && !isDisabled && current) {
+				const key = `${row}-${col}`;
+				if (grid.pendingClear.has(key)) {
+					grid.tableData[row][col] = '';
+					onNameReturn(current);
+					grid.pendingClear.clear();
+				} else {
+					grid.pendingClear.clear();
+					grid.pendingClear.add(key);
+				}
+			} else {
+				grid.pendingClear.clear();
+			}
+			return;
+		}
+
+		// ── 填座模式（默认） ──────────────────────────────────
 		if (!isAisle && !isDisabled && current) {
 			if (grid.swapFirst) {
 				if (grid.swapFirst.row === row && grid.swapFirst.col === col) {
@@ -54,7 +79,17 @@
 					const name1 = grid.tableData[grid.swapFirst.row][grid.swapFirst.col];
 					const name2 = current;
 					if (name1 && name2) {
+						// 先记录两个 key，swapCells 会将 swapFirst 置 null
+						const key1 = `${grid.swapFirst.row}-${grid.swapFirst.col}`;
+						const key2 = `${row}-${col}`;
 						grid.swapCells(grid.swapFirst.row, grid.swapFirst.col, row, col);
+						// 触发动画
+						swappingCells.add(key1);
+						swappingCells.add(key2);
+						setTimeout(() => {
+							swappingCells.delete(key1);
+							swappingCells.delete(key2);
+						}, 500);
 					} else {
 						grid.swapFirst = null;
 					}
@@ -92,19 +127,14 @@
 						{@const isDisabled = grid.disabledCells.has(key)}
 						{@const isSwapSelected = grid.swapFirst?.row === ri && grid.swapFirst?.col === ci}
 						<td
-							/** 已填入姓名 */
 							class:filled={cell && !isDisabled}
-							/** 已禁用/弃用 */
 							class:disabled={isDisabled}
-							/** 待清除(第二次点击确认移除姓名) */
 							class:confirm={grid.pendingClear.has(key)}
-							/** 待禁用(批量操作预览) */
 							class:pending-disable={grid.pendingDisable.has(key)}
-							/** 待启用(批量恢复预览) */
 							class:pending-enable={grid.pendingEnable.has(key)}
-							/** 交换选中 */
 							class:swap-selected={isSwapSelected}
-							onclick={() => handleCellClick(ri, ci)}>{isDisabled ? '弃用' : cell}</td
+							class:swapping={swappingCells.has(key)}
+							onclick={() => handleCellClick(ri, ci)}>{cell}</td
 						>
 					{/if}
 				{/each}
@@ -114,73 +144,122 @@
 </table>
 
 <style>
-	/** 表格容器，固定布局使列等宽 */
+	/* ── 表格容器 ───────────────────────────────── */
 	.grid {
 		border-collapse: separate;
+		border-spacing: 0;
 		width: 100%;
 		flex: 1;
-		border-spacing: 0;
 		table-layout: fixed;
 	}
-	/** 基础单元格样式 */
+
+	/* ── 基础单元格 ─────────────────────────────── */
 	.grid td {
-		border: 1px solid #ccc;
-		background: #fff;
+		border-right: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+		border-top: none;
+		border-left: none;
+		background: var(--surface);
 		cursor: pointer;
 		text-align: center;
-		font-size: 12px;
+		font-size: 11px;
+		font-family: var(--font-mono);
+		color: var(--text-primary);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		user-select: none;
 		width: 10%;
 		height: 10%;
+		transition:
+			background var(--duration) var(--ease-out),
+			color var(--duration) var(--ease-out);
 	}
-	/* 左上角 */
+
+	/* 首行加顶部边框 */
+	.grid tr:first-child td {
+		border-top: 1px solid var(--border);
+	}
+	/* 首列加左边框 */
+	.grid td:first-child {
+		border-left: 1px solid var(--border);
+	}
+
+	/* 圆角 — 四个表格角 */
 	.grid tr:first-child td:first-child {
-		border-top-left-radius: 8px;
+		border-top-left-radius: var(--radius-sm);
 	}
-	/* 右上角 */
 	.grid tr:first-child td:last-child {
-		border-top-right-radius: 8px;
+		border-top-right-radius: var(--radius-sm);
 	}
-	/* 左下角 */
 	.grid tr:last-child td:first-child {
-		border-bottom-left-radius: 8px;
+		border-bottom-left-radius: var(--radius-sm);
 	}
-	/* 右下角 */
 	.grid tr:last-child td:last-child {
-		border-bottom-right-radius: 8px;
+		border-bottom-right-radius: var(--radius-sm);
 	}
-	/** 已填入姓名的座位: 浅蓝色 */
+
+	/* ── 状态变体 ───────────────────────────────── */
+
+	/** 已填入姓名 */
 	.grid td.filled {
-		background: #e3f2fd;
+		background: var(--accent-subtle);
+		color: var(--text-primary);
 	}
-	/** 待确认清除: 橙色提示 */
+
+	/** 待确认清除（移除模式下点击后高亮，再次点击确认） */
 	.grid td.confirm {
-		background: #ffe0b2;
+		background: #fef3f3;
+		border-color: #fbdada;
+		color: #eb5757;
 	}
-	/** 已禁用的座位: 灰色 */
+
+	/** 已禁用（视觉弱化，无文字标记） */
 	.grid td.disabled {
-		background: #e0e0e0;
-		color: #999;
+		background: var(--surface-active);
+		color: var(--text-muted);
+		cursor: default;
+		/* 降低对比度以表明不可用 */
+		opacity: 0.55;
 	}
-	/** 批量操作预览: 橙色 */
+
+	/** 批量操作预览 */
 	.grid td.pending-disable,
 	.grid td.pending-enable {
-		background: #ffe0b2;
+		background: var(--amber-subtle);
+		border-color: var(--amber-border);
 	}
-	/** 交换选中: 绿色 */
+
+	/** 交换选中 — 用内嵌边框突出，不改底色 */
 	.grid td.swap-selected {
-		background: #a5d6a7;
-		box-shadow: inset 0 0 0 2px #4caf50;
+		background: var(--accent-subtle);
+		box-shadow: inset 0 0 0 2px var(--accent);
 	}
-	/** 过道列合并单元格: 深灰加粗 */
+
+	/** 交换完成闪光动画 — 用大扩散 inset shadow 叠色，不改变布局 */
+	@keyframes swap-flash {
+		0% {
+			box-shadow: inset 0 0 0 100vw rgba(35, 131, 226, 0.22);
+		}
+		100% {
+			box-shadow: inset 0 0 0 100vw rgba(35, 131, 226, 0);
+		}
+	}
+
+	.grid td.swapping {
+		animation: swap-flash 500ms var(--ease-out) forwards;
+	}
+
+	/** 过道合并列 */
 	.grid td.aisle-cell {
-		background: #9e9e9e;
-		color: #fff;
+		background: var(--surface-active);
+		color: var(--text-muted);
 		text-align: center;
-		font-weight: bold;
-		font-size: 14px;
+		font-size: 10px;
+		font-family: var(--font-sans);
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+		border-left: 1px solid var(--border);
 	}
 </style>

@@ -29,64 +29,97 @@
 
 	interface Props {
 		grid: SeatGridState;
+		/** 有学生被设为过道清退时的回调，参数为被清退的姓名数组 */
+		onDisplace: (names: string[]) => void;
 	}
 
-	let { grid }: Props = $props();
+	let { grid, onDisplace }: Props = $props();
+
+	function handleToggle(ci: number) {
+		const displaced = grid.toggleAisle(ci);
+		if (displaced.length > 0) onDisplace(displaced);
+	}
 </script>
 
 <!-- 10 列的控制按钮，显示列号并标记过道状态 -->
 <div class="column-controls">
 	{#each Array(10), ci (ci)}
-		<button class:aisle={grid.isAisle(ci)} onclick={() => grid.toggleAisle(ci)}>
-			{ci + 1}
-			{#if grid.isAisle(ci)}
-				过道
-			{/if}
+		<button class:aisle={grid.isAisle(ci)} onclick={() => handleToggle(ci)}>
+			<span class="col-num">{ci + 1}</span>
+			<span class="col-label" class:visible={grid.isAisle(ci)}>过道</span>
 		</button>
 	{/each}
 </div>
 
 <style>
-	/** 按钮网格容器，10 列等宽分布 */
 	.column-controls {
 		display: grid;
 		grid-template-columns: repeat(10, 1fr);
 		gap: 0;
-		margin-bottom: 0.5rem;
-	}
-	/* 1. 左上角：第一个元素 */
-	.column-controls > :first-child {
-		border-top-left-radius: 8px;
-	}
-
-	/* 2. 右上角：第 10 个元素（第一行的末尾） */
-	.column-controls > :nth-child(10) {
-		border-top-right-radius: 8px;
+		margin-bottom: 6px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		overflow: hidden;
 	}
 
-	/* 3. 左下角：假设只有一行，则是第一个；若有多行，需定位最后一行首位 */
-	/* 如果不确定行数，可以用 :nth-last-child 来倒序定位 */
-	.column-controls > :nth-last-child(10) {
-		border-bottom-left-radius: 8px;
-	}
-
-	/* 4. 右下角：最后一个元素 */
-	.column-controls > :last-child {
-		border-bottom-right-radius: 8px;
-	}
 	.column-controls button {
-		padding: 0.3rem;
-		border: 1px solid #ccc;
-		background: #fff;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 4px 2px;
+		border: none;
+		border-right: 1px solid var(--border);
+		background: var(--surface);
 		cursor: pointer;
-		font-size: 12px;
-		text-align: center;
 		user-select: none;
+		color: var(--text-secondary);
+		gap: 1px;
+		transition:
+			background var(--duration) var(--ease-out),
+			color var(--duration) var(--ease-out);
 	}
-	/** 被设置为过道的列按钮样式 */
+
+	.column-controls button:last-child {
+		border-right: none;
+	}
+
+	.column-controls button:hover {
+		background: var(--surface-hover);
+	}
+
+	.col-num {
+		font-size: 11px;
+		font-family: var(--font-mono);
+		font-weight: 500;
+		color: var(--text-secondary);
+		line-height: 1;
+	}
+
+	.col-label {
+		font-size: 9px;
+		font-family: var(--font-sans);
+		color: var(--text-muted);
+		line-height: 1;
+		visibility: hidden;
+	}
+
+	.col-label.visible {
+		visibility: visible;
+	}
+
+	/** 已设置为过道的列按钮 */
 	.column-controls button.aisle {
-		background: #9e9e9e;
-		color: #fff;
-		border-color: #757575;
+		background: var(--text-primary);
+		border-right-color: #555;
+	}
+
+	.column-controls button.aisle .col-num,
+	.column-controls button.aisle .col-label {
+		color: rgba(255, 255, 255, 0.85);
+	}
+
+	.column-controls button.aisle:hover {
+		background: #2a2924;
 	}
 </style>

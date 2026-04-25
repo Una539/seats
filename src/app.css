@@ -1,0 +1,87 @@
+/*
+ * Copyright (C) 2026 Una
+ *
+ * This file is part of seats.
+ *
+ * seats is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * seats is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with seats. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+	/* Color palette */
+	--bg: #f7f6f3;
+	--surface: #ffffff;
+	--surface-hover: #f7f6f3;
+	--surface-active: #efeeea;
+
+	--text-primary: #37352f;
+	--text-secondary: #73726e;
+	--text-muted: #9b9a97;
+
+	--border: #e8e8e5;
+	--border-strong: #c9c8c4;
+
+	/* Accent — used sparingly */
+	--accent: #2383e2;
+	--accent-hover: #1e74cc;
+	--accent-subtle: #eef3fb;
+
+	/* Semantic states */
+	--amber-subtle: #fef9ec;
+	--amber-border: #f1e0a8;
+	--green-subtle: #ebf5ee;
+	--green-border: #a9d5b3;
+
+	/* Typography */
+	--font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+	--font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+
+	/* Geometry */
+	--radius-sm: 4px;
+	--radius: 6px;
+
+	/* Motion */
+	--ease-out: cubic-bezier(0, 0, 0.2, 1);
+	--duration: 150ms;
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	height: 100%;
+	background: var(--bg);
+	color: var(--text-primary);
+	font-family: var(--font-sans);
+	font-size: 13px;
+	line-height: 1.65;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove default button / input chrome */
+button,
+input,
+label {
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+}

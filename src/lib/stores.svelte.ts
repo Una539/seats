@@ -74,10 +74,13 @@ export class SeatGridState {
 
 	/**
 	 * 切换指定列的过道状态
-	 * 设置为过道时会清空该列所有数据和禁用状态
+	 * 设置为过道时清空该列所有数据，并返回被清退的姓名数组
 	 * 取消过道时仅从数组中移除该列索引
+	 *
+	 * @returns 被清退的学生姓名（设为过道时）；取消过道时返回空数组
 	 */
-	toggleAisle(col: number) {
+	toggleAisle(col: number): string[] {
+		const displaced: string[] = [];
 		if (this.isAisle(col)) {
 			this.aisleColumns = this.aisleColumns.filter((c) => c !== col);
 			for (let row = 0; row < 10; row++) {
@@ -85,8 +88,17 @@ export class SeatGridState {
 				this.disabledCells.delete(`${row}-${col}`);
 			}
 		} else {
+			for (let row = 0; row < 10; row++) {
+				const name = this.tableData[row][col];
+				if (name) {
+					displaced.push(name);
+					this.tableData[row][col] = '';
+				}
+				this.disabledCells.delete(`${row}-${col}`);
+			}
 			this.aisleColumns = [...this.aisleColumns, col];
 		}
+		return displaced;
 	}
 
 	/**

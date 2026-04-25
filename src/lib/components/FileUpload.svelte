@@ -43,68 +43,128 @@
 	let { fileName, lineCount, error, onFileUpload, onRandomFill, onExport }: Props = $props();
 </script>
 
-<!-- 文件上传控件和随机填入按钮 -->
-<div class="top">
-	<label class="btn file-btn">
+<div class="actions">
+	<!-- 文件上传 -->
+	<label class="btn btn-ghost">
 		<span>浏览文件</span>
 		<input type="file" accept=".txt" style="display: none;" onchange={onFileUpload} />
 	</label>
-	<button class="btn random-btn" onclick={onRandomFill}>随机填入</button>
-	<button class="btn export-btn" onclick={onExport}>导出 XLSX</button>
+
+	<!-- 随机填入 — 主操作，深色实底 -->
+	<button class="btn btn-primary" onclick={onRandomFill}>随机填入</button>
+
+	<!-- 导出 -->
+	<button class="btn btn-mid" onclick={onExport}>导出 XLSX</button>
+
+	<!-- 文件信息 -->
+	{#if fileName}
+		<p class="meta">
+			<span class="meta-label">待分配</span>
+			<span class="meta-value">{lineCount}</span>
+		</p>
+	{/if}
+
+	<!-- 错误信息 -->
+	{#if error}
+		<p class="error">{error}</p>
+	{/if}
 </div>
 
-<!-- 显示文件信息 -->
-{#if fileName}
-	<p>学生人数: {lineCount}</p>
-{/if}
-
-<!-- 显示错误信息 -->
-{#if error}
-	<p>{error}</p>
-{/if}
-
 <style>
-	/** 顶部操作区域间距 */
-	.top {
+	.actions {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 6px;
+		flex-shrink: 0;
 	}
+
+	/* ── 基础按钮 ─────────────────────────────── */
 	.btn {
 		box-sizing: border-box;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		width: 100%;
-		appearance: none;
-		padding: 0.5rem;
+		padding: 6px 10px;
+		border-radius: var(--radius-sm);
 		cursor: pointer;
-		font-size: 14px;
-		border-radius: 2px;
+		font-size: 12px;
+		font-weight: 500;
 		user-select: none;
+		transition:
+			background var(--duration) var(--ease-out),
+			border-color var(--duration) var(--ease-out),
+			color var(--duration) var(--ease-out);
 	}
-	/** 文件上传按钮样式 */
-	.file-btn {
-		border: 1px solid #ddd;
-		background: #fff;
+
+	/* 浏览文件 — 最浅，近白 */
+	.btn-ghost {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		color: var(--text-secondary);
 	}
-	.file-btn:hover {
-		background: #fafafa;
+
+	.btn-ghost:hover {
+		background: var(--surface-hover);
+		border-color: var(--border-strong);
+		color: var(--text-primary);
 	}
-	/** 随机填入按钮样式 */
-	.random-btn {
-		border: 1px solid #1565c0;
-		background: #1976d2;
+
+	/* 随机填入 — 最深，近黑 */
+	.btn-primary {
+		background: var(--text-primary);
+		border: 1px solid var(--text-primary);
+		color: #ffffff;
 	}
-	.random-btn:hover {
-		background: #1565c0;
+
+	.btn-primary:hover {
+		background: #2a2924;
+		border-color: #2a2924;
 	}
-	/** 导出 Excel 按钮样式 */
-	.export-btn {
-		border: 1px solid #2e7d32;
-		background: #4caf50;
+
+	/* 导出 XLSX — 中灰 */
+	.btn-mid {
+		background: #adaca8;
+		border: 1px solid #9b9a97;
+		color: #ffffff;
 	}
-	.export-btn:hover {
-		background: #2e7d32;
+
+	.btn-mid:hover {
+		background: #9b9a97;
+		border-color: #87867f;
+	}
+
+	/* ── 文件元信息 ───────────────────────────── */
+	.meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 4px 6px;
+		background: var(--surface-hover);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+	}
+
+	.meta-label {
+		font-size: 11px;
+		color: var(--text-muted);
+	}
+
+	.meta-value {
+		font-size: 11px;
+		font-family: var(--font-mono);
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	/* ── 错误提示 ─────────────────────────────── */
+	.error {
+		font-size: 11px;
+		color: #eb5757;
+		padding: 4px 6px;
+		border: 1px solid #fbdada;
+		border-radius: var(--radius-sm);
+		background: #fef3f3;
+		line-height: 1.5;
 	}
 </style>

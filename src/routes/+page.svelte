@@ -21,7 +21,7 @@
   主页面组件
   负责组合所有子组件并管理应用级别的状态
   左侧: 座位网格和列控制
-  右侧: 文件上传、随机填入和名单列表
+  右侧: 固定侧边栏 — 文件上传、随机填入和名单列表
 -->
 
 <script lang="ts">
@@ -40,6 +40,8 @@
 	let error = $state('');
 	/** 用户在右侧名单中选中的姓名，点击网格时会填入此姓名 */
 	let selectedLine = $state('');
+	/** 当前操作模式：fill = 填入/交换，remove = 移除学生 */
+	let mode: 'fill' | 'remove' = $state('fill');
 
 	/** 座位网格状态实例，管理所有表格相关操作 */
 	const grid = new SeatGridState();
@@ -119,57 +121,172 @@
 	function handleExport() {
 		exportToXlsx(grid);
 	}
+
+	/**
+	 * 切换模式时清除所有待操作状态
+	 */
+	function setMode(m: 'fill' | 'remove') {
+		mode = m;
+		grid.pendingClear.clear();
+		grid.swapFirst = null;
+		grid.resetBatch();
+		selectedLine = '';
+	}
+
+	/**
+	 * 过道操作导致学生被清退，将其加回名单
+	 */
+	function handleDisplace(names: string[]) {
+		lines = [...lines, ...names];
+	}
 </script>
 
-<!-- 左右分栏布局 -->
+<!-- 主布局：左侧内容区 + 右侧固定侧边栏 -->
 <div class="layout">
-	<div class="left">
-		<ColumnControls {grid} />
-		<SeatGrid {grid} {selectedLine} onNameReturn={handleNameReturn} onNameFill={handleNameFill} />
-	</div>
-	<div class="right">
-		<FileUpload
-			{fileName}
-			lineCount={lines.length}
-			{error}
-			onFileUpload={handleFileUpload}
-			onRandomFill={handleRandomFill}
-			onExport={handleExport}
-		/>
-		<NameList {lines} {selectedLine} onSelect={selectLine} />
-	</div>
+	<!-- 左侧：座位区域 -->
+	<main class="main">
+		<div class="main-inner">
+			<ColumnControls {grid} onDisplace={handleDisplace} />
+			<SeatGrid
+				{grid}
+				{mode}
+				{selectedLine}
+				onNameReturn={handleNameReturn}
+				onNameFill={handleNameFill}
+			/>
+		</div>
+	</main>
+
+	<!-- 右侧：固定侧边栏 -->
+	<aside class="sidebar">
+		<div class="sidebar-header">
+			<span class="sidebar-title">名单</span>
+		</div>
+		<!-- 模式切换 -->
+		<div class="mode-bar">
+			<button class="mode-btn" class:active={mode === 'fill'} onclick={() => setMode('fill')}
+				>填座</button
+			>
+			<button
+				class="mode-btn mode-btn-remove"
+				class:active={mode === 'remove'}
+				onclick={() => setMode('remove')}>移除</button
+			>
+		</div>
+		<div class="sidebar-body">
+			<FileUpload
+				{fileName}
+				lineCount={lines.length}
+				{error}
+				onFileUpload={handleFileUpload}
+				onRandomFill={handleRandomFill}
+				onExport={handleExport}
+			/>
+			<NameList {lines} {selectedLine} onSelect={selectLine} />
+		</div>
+	</aside>
 </div>
 
 <style>
-	/** 左右分栏的容器 */
 	.layout {
 		display: flex;
-
-		background: #f5f5f5;
 		width: 100%;
 		height: 100vh;
-		box-sizing: border-box;
 		overflow: hidden;
-		user-select: none;
+		background: var(--bg);
 	}
-	/** 左侧座位网格区域，占据 80% 宽度 */
-	.left {
-		width: 85%;
-		padding: 1rem;
-		box-sizing: border-box;
+
+	/* ── 左侧内容区 ─────────────────────────────── */
+	.main {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		padding: 16px;
 	}
-	/** 右侧控制面板区域，占据 20% 宽度 */
-	.right {
-		width: 15%;
-		padding: 1rem;
-		border-left: 1px solid #ddd;
-		box-sizing: border-box;
+
+	.main-inner {
+		flex: 1;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		border-radius: 10px 0 0 10px;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 12px;
+	}
+
+	/* ── 右侧固定侧边栏 ─────────────────────────── */
+	.sidebar {
+		width: 200px;
+		flex-shrink: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		border-left: 1px solid var(--border);
+		background: var(--surface);
+	}
+
+	.sidebar-header {
+		display: flex;
+		align-items: center;
+		padding: 12px 16px 10px;
+		border-bottom: 1px solid var(--border);
+		flex-shrink: 0;
+	}
+
+	.sidebar-title {
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.sidebar-body {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		padding: 12px;
+		gap: 12px;
+	}
+
+	/* ── 模式切换栏 ─────────────────────────────── */
+	.mode-bar {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		border-bottom: 1px solid var(--border);
+		flex-shrink: 0;
+	}
+
+	.mode-btn {
+		padding: 7px 0;
+		border: none;
+		background: transparent;
+		cursor: pointer;
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--text-muted);
+		transition:
+			color var(--duration) var(--ease-out),
+			background var(--duration) var(--ease-out);
+	}
+
+	.mode-btn:hover {
+		color: var(--text-primary);
+		background: var(--surface-hover);
+	}
+
+	.mode-btn.active {
+		color: var(--text-primary);
+		box-shadow: inset 0 -2px 0 var(--text-primary);
+	}
+
+	/* 移除模式激活时用红色下划线提示危险操作 */
+	.mode-btn-remove.active {
+		color: #eb5757;
+		box-shadow: inset 0 -2px 0 #eb5757;
 	}
 </style>

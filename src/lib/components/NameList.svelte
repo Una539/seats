@@ -39,7 +39,7 @@
 
 <!-- 仅在有名单数据时显示 -->
 {#if lines.length > 0}
-	<div class="lines">
+	<div class="list">
 		{#each lines as line (line)}
 			<button class:selected={selectedLine === line} onclick={() => onSelect(line)}>
 				{line}
@@ -49,29 +49,57 @@
 {/if}
 
 <style>
-	/** 名单容器，垂直滚动列表 */
-	.lines {
+	/* ── 列表容器 ───────────────────────────── */
+	.list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 2px;
 		flex: 1;
 		overflow-y: auto;
+		/* 自定义滚动条 */
+		scrollbar-width: thin;
+		scrollbar-color: var(--border-strong) transparent;
 	}
-	/** 名单项按钮 */
-	.lines button {
-		padding: 0.5rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		background: #fff;
+
+	.list::-webkit-scrollbar {
+		width: 4px;
+	}
+	.list::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.list::-webkit-scrollbar-thumb {
+		background: var(--border-strong);
+		border-radius: 2px;
+	}
+
+	/* ── 名单项 ─────────────────────────────── */
+	.list button {
+		padding: 5px 8px;
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		background: transparent;
 		cursor: pointer;
 		text-align: left;
-		font-size: 14px;
+		font-size: 12px;
+		font-family: var(--font-mono);
+		color: var(--text-primary);
 		user-select: none;
+		line-height: 1.5;
+		transition:
+			background var(--duration) var(--ease-out),
+			border-color var(--duration) var(--ease-out),
+			color var(--duration) var(--ease-out);
 	}
-	/** 当前选中的名单项: 蓝色高亮 */
-	.lines button.selected {
-		background: #1976d2;
-		color: #fff;
-		border-color: #1565c0;
+
+	.list button:hover {
+		background: var(--surface-active);
+		border-color: var(--border);
+	}
+
+	/* 选中状态 — 深色实底 */
+	.list button.selected {
+		background: var(--text-primary);
+		border-color: var(--text-primary);
+		color: #ffffff;
 	}
 </style>
