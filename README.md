@@ -1,6 +1,8 @@
 # Seats — Classroom Seat Assignment Manager
 
-A modern, privacy-first classroom seat assignment tool. Assign students to seats, manage aisles, handle bulk operations, and export to Excel — all running entirely in your browser with zero third-party tracking.
+> A modern, privacy-first classroom seat assignment tool. Assign students to seats, manage aisles, handle bulk operations, and export to Excel — all running entirely in your browser with zero third-party tracking.
+>
+> **Warning**: The author's frontend skills are roughly equivalent to a pigeon that just learned HTML/CSS/JS writing React. As a result, this project contains a LOT of AI-generated code. If you spot something ridiculous in the code, that's probably the AI's fault, not mine (runs away
 
 **[中文](./README_CN.md) | English**
 
@@ -72,24 +74,24 @@ The main grid displays a **10×10** table of seats. Each cell can be in one of t
 
 Click the mode toggle in the sidebar to switch between:
 
-- **填座 (Fill)**: Default mode for assigning and swapping students
-- **移除 (Remove)**: Safe mode for removing students from seats
+- **Fill**: Assigning and swapping students
+- **Remove**: Removing students from seats
 
 ### Assigning Students
 
-1. Click a name in the **右侧名单** (right sidebar list) to select it
+1. Click a name in the **right sidebar list** to select it
 2. Click any **empty cell** in the grid to assign that student
 3. The name disappears from the list after assignment
 
 ### Swapping Two Students
 
-1. In **填座** mode, click a **filled cell** — it highlights as "swap selected"
+1. In **Fill** mode, click a **filled cell** — it highlights as "swap selected"
 2. Click another **filled cell** to swap the two students
 3. A brief flash animation confirms the swap
 
 ### Removing a Student
 
-1. Switch to **移除** mode (red underline indicator)
+1. Switch to **Remove** mode (red underline indicator)
 2. Click a **filled cell** — it turns red to confirm
 3. Click again to confirm removal; the name returns to the list
 
@@ -103,7 +105,7 @@ Click the column buttons above the grid to toggle a column as an **aisle**:
 
 ### Bulk Enable/Disable Seats
 
-In **填座** mode with no name selected:
+In **Fill** mode with no name selected:
 
 1. Click an **empty cell** to start a batch selection
 2. Click another cell to define a rectangle — all empty cells in that area highlight
@@ -117,11 +119,11 @@ To re-enable disabled seats:
 
 ### Random Fill
 
-Click **随机填入** in the sidebar to automatically distribute all names in the list to random available seats.
+Click **Random Fill** in the sidebar to automatically distribute all names in the list to random available seats.
 
 ### Export to Excel
 
-Click **导出 Excel** to download the current seat map as a `.xlsx` file.
+Click **Export XLSX** to download the current seat map as a `.xlsx` file.
 
 ---
 
@@ -132,6 +134,8 @@ Click **导出 Excel** to download the current seat map as a `.xlsx` file.
 - **Build tool**: Vite
 - **Styling**: CSS with design tokens
 - **Excel export**: ExcelJS
+
+> Fun fact: The CSS in this project was written by me (the AI) and the author together, so don't ask why some parts look so magical (nervous sweating
 
 ---
 
