@@ -26,6 +26,8 @@ import type { SeatGridState } from '$lib/stores.svelte';
  * - 过道处合并单元格并显示为"过道"
  * - 单元格之间加入完全边框
  * - 模拟老师在讲台上的视角：表格最下面是讲台，左侧是门
+ * - 前门在左下角，后门在左上角
+ * - 去掉没有坐人的排
  */
 export async function exportToXlsx(grid: SeatGridState, filename: string = 'seats.xlsx') {
 	const workbook = new ExcelJS.Workbook();
@@ -38,52 +40,62 @@ export async function exportToXlsx(grid: SeatGridState, filename: string = 'seat
 		right: { style: 'thin' as const }
 	};
 
-	// 添加前门（左侧，第1行）
-	const frontDoorCell = worksheet.getCell(1, 1);
-	frontDoorCell.value = '前门';
-	frontDoorCell.font = { bold: true, size: 14 };
-	frontDoorCell.alignment = { vertical: 'middle', horizontal: 'center' };
-	frontDoorCell.border = borderStyle;
-
-	// 计算实际有数据的最后一行（原数据从后往前映射）
-	let maxDataRow = 1;
+	// 找出有数据的行的最小和最大索引（原数据：0=前排，9=后排）
+	let minDataRow = 10;
+	let maxDataRow = -1;
 	for (let row = 0; row < 10; row++) {
 		for (let col = 0; col < 10; col++) {
 			if (!grid.isAisle(col)) {
 				const isDisabled = grid.isDisabled(row, col);
 				const cellValue = grid.tableData[row][col];
 				if (!isDisabled && cellValue) {
-					// 将原数据的行翻转：原第9行（最后排）对应excel第1行，原第0行（最前排）对应excel第9行
-					const excelRow = 10 - row;
-					if (excelRow > maxDataRow) {
-						maxDataRow = excelRow;
-					}
+					if (row < minDataRow) minDataRow = row;
+					if (row > maxDataRow) maxDataRow = row;
 				}
 			}
 		}
 	}
 
-	// 添加后门（左侧，最后一行）
-	const backDoorCell = worksheet.getCell(maxDataRow, 1);
+	// 如果没有数据，默认显示所有行
+	if (maxDataRow === -1) {
+		minDataRow = 0;
+		maxDataRow = 9;
+	}
+
+	// 计算实际有数据的行数
+	const dataRowCount = maxDataRow - minDataRow + 1;
+
+	// 构建行映射：原数据行 -> Excel行（从后往前排列）
+	// 原数据最后一排（maxDataRow）-> Excel第1行（后门所在）
+	// 原数据第一排（minDataRow）-> Excel第dataRowCount行（前门所在）
+	const rowToExcel = (row: number) => maxDataRow - row + 1;
+
+	// 添加后门（左上角，Excel第1行，列1）
+	const backDoorCell = worksheet.getCell(1, 1);
 	backDoorCell.value = '后门';
 	backDoorCell.font = { bold: true, size: 14 };
 	backDoorCell.alignment = { vertical: 'middle', horizontal: 'center' };
 	backDoorCell.border = borderStyle;
 
-	// 添加座位网格（行1-10，列2-11）
-	// 行从后往前映射：原数据行9（最后排）-> excel行1，原数据行0（最前排）-> excel行10
-	for (let row = 0; row < 10; row++) {
-		const excelRow = 10 - row; // 翻转行，从后往前
+	// 添加前门（左下角，Excel第dataRowCount行，列1）
+	const frontDoorCell = worksheet.getCell(dataRowCount, 1);
+	frontDoorCell.value = '前门';
+	frontDoorCell.font = { bold: true, size: 14 };
+	frontDoorCell.alignment = { vertical: 'middle', horizontal: 'center' };
+	frontDoorCell.border = borderStyle;
+
+	// 添加座位网格
+	for (let row = minDataRow; row <= maxDataRow; row++) {
+		const excelRow = rowToExcel(row);
 
 		// 处理过道列
 		for (let col = 0; col < 10; col++) {
 			if (grid.isAisle(col)) {
-				if (row === 0) {
-					// 只在第一行（原数据最后排）合并过道
-					const startCol = col + 2; // 列偏移+1（因为有门在列1）
+				if (row === minDataRow) {
+					const startCol = col + 2;
 					const endCol = col + 2;
 					const startRow = 1;
-					const endRow = maxDataRow;
+					const endRow = dataRowCount;
 
 					worksheet.mergeCells(startRow, startCol, endRow, endCol);
 					const mergedCell = worksheet.getCell(startRow, startCol);
@@ -103,7 +115,7 @@ export async function exportToXlsx(grid: SeatGridState, filename: string = 'seat
 				const cellValue = grid.tableData[row][col];
 
 				if (!isDisabled) {
-					const excelCol = col + 2; // 列偏移+1（因为有门在列1）
+					const excelCol = col + 2;
 					const cell = worksheet.getCell(excelRow, excelCol);
 
 					if (cellValue) {
@@ -117,11 +129,8 @@ export async function exportToXlsx(grid: SeatGridState, filename: string = 'seat
 		}
 	}
 
-	// 添加讲桌（在底部，即行11，列2-11）
-	const deskRowNum = Math.max(11, maxDataRow + 1);
-	worksheet.addRow([]);
-	const deskRow = worksheet.getRow(deskRowNum);
-	deskRow.height = 35;
+	// 添加讲桌（底部，列2-11）
+	const deskRowNum = dataRowCount + 1;
 	const deskCell = worksheet.getCell(deskRowNum, 2);
 	deskCell.value = '讲桌';
 	deskCell.font = { bold: true, size: 16 };
@@ -130,6 +139,7 @@ export async function exportToXlsx(grid: SeatGridState, filename: string = 'seat
 	for (let c = 2; c <= 11; c++) {
 		worksheet.getCell(deskRowNum, c).border = borderStyle;
 	}
+	worksheet.getRow(deskRowNum).height = 35;
 
 	// 设置列宽和行高
 	for (let r = 1; r <= deskRowNum; r++) {
@@ -138,7 +148,7 @@ export async function exportToXlsx(grid: SeatGridState, filename: string = 'seat
 	for (let c = 2; c <= 11; c++) {
 		worksheet.getColumn(c).width = 18;
 	}
-	worksheet.getColumn(1).width = 10; // 门所在列
+	worksheet.getColumn(1).width = 10;
 
 	const buffer = await workbook.xlsx.writeBuffer();
 	const blob = new Blob([buffer], {

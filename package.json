@@ -2,7 +2,7 @@
 	"name": "seats",
 	"license": "AGPL-3.0-or-later",
 	"private": true,
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -13,7 +13,10 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"test:export": "node test-export-core.js"
+		"test": "node __tests__/run-all-tests.js",
+		"test:stores": "node __tests__/test-stores.test.js",
+		"test:export": "node __tests__/test-export.test.js",
+		"test:i18n": "node __tests__/test-i18n.test.js"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.4",
