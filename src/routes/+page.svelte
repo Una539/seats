@@ -170,7 +170,9 @@
 	<aside class="sidebar">
 		<div class="sidebar-header">
 			<span class="sidebar-title">{i18n.sidebar.title}</span>
-			<button class="lang-toggle" onclick={toggleLocale}>{localeStore.locale === 'en' ? '中文' : 'EN'}</button>
+			<button class="lang-toggle" onclick={toggleLocale}
+				>{localeStore.locale === 'en' ? '中文' : 'EN'}</button
+			>
 		</div>
 		<!-- 模式切换 -->
 		<div class="mode-bar">
