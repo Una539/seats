@@ -17,7 +17,8 @@
 | **Swap & remove modes** | Two dedicated modes with clear visual feedback for safe editing                               |
 | **Bulk operations**     | Drag-select or click twice to batch-toggle seat availability                                  |
 | **Excel export**        | Download your seat map as a `.xlsx` file ready for printing                                   |
-| **Offline capable**     | Pure client-side Svelte app; works offline after first load                                   |
+| **Multi-language**      | Switch between English and Chinese (简体中文) with one click; persists in localStorage        |
+| **Offline capable**     | Pure client-side SolidJS app; works offline after first load                                  |
 | **Privacy-first**       | Zero third-party tracking, no server required                                                 |
 
 ---
@@ -29,30 +30,49 @@ seats/
 ├── src/
 │   ├── lib/
 │   │   ├── components/
-│   │   │   ├── ColumnControls.svelte   # Column toggle buttons (aisle/swap)
-│   │   │   ├── FileUpload.svelte        # File upload + random fill + export
-│   │   │   ├── NameList.svelte          # Student name list with selection
-│   │   │   └── SeatGrid.svelte          # 10x10 seat grid table
-│   │   ├── stores.svelte.ts             # SeatGridState class (all grid logic)
-│   │   ├── types.ts                     # TypeScript type definitions
-│   │   ├── export.ts                    # Excel export (ExcelJS)
-│   │   └── index.ts                     # Library entry point
-│   ├── routes/
-│   │   ├── +layout.svelte               # Root layout
-│   │   ├── +layout.ts                  # Preload configuration
-│   │   └── +page.svelte                # Main page (state orchestration)
-│   ├── app.css                         # Design tokens & global styles
-│   ├── app.html                        # HTML template
-│   └── app.d.ts                        # TypeScript declarations
+│   │   │   ├── ColumnControls.tsx    # Column toggle buttons (aisle/normal)
+│   │   │   ├── FileUpload.tsx        # File upload + random fill + export
+│   │   │   ├── GridCell.tsx          # Individual seat cell rendering
+│   │   │   ├── ModeBar.tsx           # Fill / Remove mode toggle
+│   │   │   ├── NameList.tsx          # Student name list with selection
+│   │   │   ├── SeatGrid.tsx          # 10×10 seat grid table
+│   │   │   └── Sidebar.tsx           # Sidebar layout (mode + file + list)
+│   │   ├── i18n/
+│   │   │   ├── cn.ts                 # Chinese translations
+│   │   │   ├── en.ts                 # English translations
+│   │   │   └── index.ts              # Locale store & reactive translator
+│   │   ├── stores/
+│   │   │   ├── aisleOps.ts           # Aisle column logic
+│   │   │   ├── batchOps.ts           # Bulk selection operations
+│   │   │   ├── cellMutations.ts      # Single-cell state mutations
+│   │   │   ├── fillCell.ts           # Cell fill & swap logic
+│   │   │   ├── gridState.ts          # Grid state type definitions
+│   │   │   ├── randomOps.ts          # Random fill algorithm
+│   │   │   ├── rectUtils.ts          # Rectangle selection utilities
+│   │   │   ├── useAppState.ts        # Global app state hook
+│   │   │   └── useSeatGrid.ts        # Seat grid reactive state hook
+│   │   ├── types.ts                  # TypeScript type definitions
+│   │   ├── export.ts                 # Excel export (ExcelJS)
+│   │   └── index.ts                  # Library entry point
+│   ├── App.tsx                       # Root component (grid + sidebar)
+│   ├── app.css                       # Design tokens & global styles
+│   ├── index.tsx                     # SolidJS app entry (render to DOM)
+│   └── vite-env.d.ts                 # Vite type declarations
 ├── static/
-│   ├── names.txt                       # Default student list (optional)
-│   ├── CNAME                           # Custom domain config
-│   ├── robots.txt                      # Crawler config
-│   └── .nojekyll                       # Jekyll bypass for GitHub Pages
-├── svelte.config.js                    # SvelteKit configuration
-├── vite.config.ts                      # Vite build configuration
-├── tsconfig.json                       # TypeScript configuration
-└── package.json                        # Dependencies & scripts
+│   ├── names.txt                     # Default student list (optional)
+│   ├── CNAME                         # Custom domain config
+│   ├── robots.txt                    # Crawler config
+│   └── .nojekyll                     # Jekyll bypass for GitHub Pages
+├── __tests__/
+│   ├── run-all-tests.js              # Test runner
+│   ├── test-export.test.js           # Export logic tests
+│   ├── test-i18n.test.js             # i18n tests
+│   └── test-stores.test.js           # Store logic tests
+├── .github/workflows/
+│   └── deploy.yml                    # Auto-deploy to GitHub Pages
+├── vite.config.ts                    # Vite configuration
+├── tsconfig.json                     # TypeScript configuration
+└── package.json                      # Dependencies & scripts
 ```
 
 ---
@@ -72,7 +92,7 @@ The main grid displays a **10×10** table of seats. Each cell can be in one of t
 
 ### Modes
 
-Click the mode toggle in the sidebar to switch between:
+Use the **mode toggle buttons** at the top of the sidebar to switch between:
 
 - **Fill**: Assigning and swapping students
 - **Remove**: Removing students from seats
@@ -91,7 +111,7 @@ Click the mode toggle in the sidebar to switch between:
 
 ### Removing a Student
 
-1. Switch to **Remove** mode (red underline indicator)
+1. Switch to **Remove** mode (the button turns red)
 2. Click a **filled cell** — it turns red to confirm
 3. Click again to confirm removal; the name returns to the list
 
@@ -125,15 +145,20 @@ Click **Random Fill** in the sidebar to automatically distribute all names in th
 
 Click **Export XLSX** to download the current seat map as a `.xlsx` file.
 
+### Language Switch
+
+Click the **language button** (EN / 中文) in the sidebar header to toggle between English and Chinese. Your preference is saved to `localStorage`.
+
 ---
 
 ## Tech Stack
 
-- **Framework**: SvelteKit (Svelte 5)
+- **Framework**: SolidJS
 - **Language**: TypeScript
 - **Build tool**: Vite
 - **Styling**: CSS with design tokens
 - **Excel export**: ExcelJS
+- **Testing**: Node.js native test runner
 
 > Fun fact: The CSS in this project was written by me (the AI) and the author together, so don't ask why some parts look so magical (nervous sweating
 
@@ -148,15 +173,27 @@ pnpm dev
 
 ## Development Commands
 
-| Command        | Description                      |
-| -------------- | -------------------------------- |
-| `pnpm dev`     | Start dev server with hot reload |
-| `pnpm check`   | Type-check and lint              |
-| `pnpm format`  | Format code                      |
-| `pnpm build`   | Build for production             |
-| `pnpm preview` | Preview production build locally |
+| Command           | Description                              |
+| ----------------- | ---------------------------------------- |
+| `pnpm dev`        | Start dev server with hot reload         |
+| `pnpm lint`       | Run Prettier check + ESLint              |
+| `pnpm format`     | Format code with Prettier                |
+| `pnpm build`      | Build for production                     |
+| `pnpm preview`    | Preview production build locally         |
+| `pnpm test`       | Run all tests                            |
+| `pnpm test:stores`| Run store logic tests                    |
+| `pnpm test:export`| Run export logic tests                   |
+| `pnpm test:i18n`  | Run i18n tests                           |
 
-The build output is static — deploy `/build` to any static host.
+The build output is static — deploy `/dist` to any static host.
+
+---
+
+## Deployment
+
+This project uses **GitHub Actions** to automatically build and deploy to **GitHub Pages** on every push to `main`.
+
+Workflow file: [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
 
 ---
 

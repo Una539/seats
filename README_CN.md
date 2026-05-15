@@ -17,7 +17,8 @@
 | **交换/移除模式** | 两种独立模式，视觉反馈清晰，操作安全             |
 | **批量管理**      | 框选或双击即可批量启用/禁用座位                  |
 | **Excel 导出**    | 将座位表导出为 `.xlsx` 文件，直接打印使用        |
-| **离线可用**      | 纯前端 Svelte 应用，首次加载后可离线使用         |
+| **多语言支持**    | 一键切换中英文；语言偏好自动保存到 localStorage  |
+| **离线可用**      | 纯前端 SolidJS 应用，首次加载后可离线使用        |
 | **隐私优先**      | 零第三方追踪，无需服务器                         |
 
 ---
@@ -29,30 +30,49 @@ seats/
 ├── src/
 │   ├── lib/
 │   │   ├── components/
-│   │   │   ├── ColumnControls.svelte   # 列控制按钮（过道/普通切换）
-│   │   │   ├── FileUpload.svelte        # 文件上传 + 随机填入 + 导出
-│   │   │   ├── NameList.svelte          # 学生名单列表（可选择）
-│   │   │   └── SeatGrid.svelte          # 10×10 座位网格表格
-│   │   ├── stores.svelte.ts             # SeatGridState 类（所有网格逻辑）
-│   │   ├── types.ts                     # TypeScript 类型定义
-│   │   ├── export.ts                    # Excel 导出（基于 ExcelJS）
-│   │   └── index.ts                     # 库入口文件
-│   ├── routes/
-│   │   ├── +layout.svelte               # 根布局
-│   │   ├── +layout.ts                  # 预加载配置
-│   │   └── +page.svelte                # 主页面（状态编排）
-│   ├── app.css                         # 设计令牌 & 全局样式
-│   ├── app.html                        # HTML 模板
-│   └── app.d.ts                        # TypeScript 声明
+│   │   │   ├── ColumnControls.tsx    # 列控制按钮（过道/普通切换）
+│   │   │   ├── FileUpload.tsx        # 文件上传 + 随机填入 + 导出
+│   │   │   ├── GridCell.tsx          # 单个座位单元格渲染
+│   │   │   ├── ModeBar.tsx           # 填座/移除 模式切换栏
+│   │   │   ├── NameList.tsx          # 学生名单列表（可选择）
+│   │   │   ├── SeatGrid.tsx          # 10×10 座位网格表格
+│   │   │   └── Sidebar.tsx           # 侧边栏布局（模式+文件+名单）
+│   │   ├── i18n/
+│   │   │   ├── cn.ts                 # 中文翻译
+│   │   │   ├── en.ts                 # 英文翻译
+│   │   │   └── index.ts              # 语言状态存储与响应式翻译器
+│   │   ├── stores/
+│   │   │   ├── aisleOps.ts           # 过道列逻辑
+│   │   │   ├── batchOps.ts           # 批量选择操作
+│   │   │   ├── cellMutations.ts      # 单格状态变更
+│   │   │   ├── fillCell.ts           # 填座与交换逻辑
+│   │   │   ├── gridState.ts          # 网格状态类型定义
+│   │   │   ├── randomOps.ts          # 随机填入算法
+│   │   │   ├── rectUtils.ts          # 矩形框选工具
+│   │   │   ├── useAppState.ts        # 全局应用状态 Hook
+│   │   │   └── useSeatGrid.ts        # 座位网格响应式状态 Hook
+│   │   ├── types.ts                  # TypeScript 类型定义
+│   │   ├── export.ts                 # Excel 导出（基于 ExcelJS）
+│   │   └── index.ts                  # 库入口文件
+│   ├── App.tsx                       # 根组件（网格 + 侧边栏）
+│   ├── app.css                       # 设计令牌 & 全局样式
+│   ├── index.tsx                     # SolidJS 应用入口（渲染到 DOM）
+│   └── vite-env.d.ts                 # Vite 类型声明
 ├── static/
-│   ├── names.txt                       # 默认学生名单（可选）
-│   ├── CNAME                           # 自定义域名配置
-│   ├── robots.txt                      # 爬虫配置
-│   └── .nojekyll                       # GitHub Pages Jekyll 跳过配置
-├── svelte.config.js                    # SvelteKit 配置
-├── vite.config.ts                      # Vite 构建配置
-├── tsconfig.json                       # TypeScript 配置
-└── package.json                        # 依赖和脚本
+│   ├── names.txt                     # 默认学生名单（可选）
+│   ├── CNAME                         # 自定义域名配置
+│   ├── robots.txt                    # 爬虫配置
+│   └── .nojekyll                     # GitHub Pages Jekyll 跳过配置
+├── __tests__/
+│   ├── run-all-tests.js              # 测试运行器
+│   ├── test-export.test.js           # 导出逻辑测试
+│   ├── test-i18n.test.js             # 国际化测试
+│   └── test-stores.test.js           # 状态逻辑测试
+├── .github/workflows/
+│   └── deploy.yml                    # 自动部署到 GitHub Pages
+├── vite.config.ts                    # Vite 配置
+├── tsconfig.json                     # TypeScript 配置
+└── package.json                      # 依赖和脚本
 ```
 
 ---
@@ -72,7 +92,7 @@ seats/
 
 ### 模式切换
 
-点击侧边栏中的模式切换按钮，可在两种模式间切换：
+使用侧边栏顶部的**模式切换按钮**在两种模式间切换：
 
 - **填座**：用于分配和交换学生
 - **移除**：用于从座位移除学生
@@ -91,7 +111,7 @@ seats/
 
 ### 移除学生
 
-1. 切换到**移除**模式（底部出现红色下划线提示）
+1. 切换到**移除**模式（按钮变为红色）
 2. 点击一个**已填充单元格** — 该座位变红提示确认
 3. 再次点击以确认移除，学生姓名回到名单
 
@@ -123,15 +143,20 @@ seats/
 
 点击**导出 Excel**，将当前座位表下载为 `.xlsx` 文件。
 
+### 语言切换
+
+点击侧边栏标题旁的**语言按钮**（EN / 中文）切换中英文界面。语言偏好会自动保存到 `localStorage`。
+
 ---
 
 ## 技术栈
 
-- **框架**: SvelteKit (Svelte 5)
+- **框架**: SolidJS
 - **语言**: TypeScript
 - **构建工具**: Vite
 - **样式**: CSS 设计令牌
 - **Excel 导出**: ExcelJS
+- **测试**: Node.js 原生测试运行器
 
 > 说起来你可能不信，这个项目的 CSS 是我（指 AI）和作者一起肝出来的，所以别问为什么某些地方样式写得那么奇妙（目光躲闪
 
@@ -146,15 +171,27 @@ pnpm dev
 
 ## 开发命令
 
-| 命令           | 说明                 |
-| -------------- | -------------------- |
-| `pnpm dev`     | 启动热重载开发服务器 |
-| `pnpm check`   | 类型检查和代码检查   |
-| `pnpm format`  | 格式化代码           |
-| `pnpm build`   | 构建生产版本         |
-| `pnpm preview` | 本地预览生产版本     |
+| 命令               | 说明                     |
+| ------------------ | ------------------------ |
+| `pnpm dev`         | 启动热重载开发服务器     |
+| `pnpm lint`        | 运行 Prettier 检查 + ESLint |
+| `pnpm format`      | 格式化代码               |
+| `pnpm build`       | 构建生产版本             |
+| `pnpm preview`     | 本地预览生产版本         |
+| `pnpm test`        | 运行全部测试             |
+| `pnpm test:stores` | 运行状态逻辑测试         |
+| `pnpm test:export` | 运行导出逻辑测试         |
+| `pnpm test:i18n`   | 运行国际化测试           |
 
-构建产物为纯静态文件，可部署到任意静态托管服务。
+构建产物为纯静态文件，可部署 `/dist` 到任意静态托管服务。
+
+---
+
+## 部署
+
+本项目使用 **GitHub Actions** 实现自动构建并部署到 **GitHub Pages**，每次推送到 `main` 分支时自动触发。
+
+工作流文件：[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
 
 ---
 
