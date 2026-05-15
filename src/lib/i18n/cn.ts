@@ -17,6 +17,7 @@
  * along with seats. If not, see <https://www.gnu.org/licenses/>.
  */
 
+/** 中文语言包 */
 export const cn = {
 	layout: {
 		title: 'Seats',

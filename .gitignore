@@ -6,6 +6,7 @@ node_modules
 .output
 
 # Vite
+dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
