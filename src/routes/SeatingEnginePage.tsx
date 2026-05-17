@@ -13,6 +13,7 @@ import {
 	flattenSeatingResultWithDividers,
 	saveResultToStorage,
 	exportResultToJSON,
+	exportResultToTXT,
 	DefaultSeatingConfig,
 	type SeatingConfig,
 	type SeatingResult
@@ -20,6 +21,7 @@ import {
 import XlsxUploader from '$lib/components/engine/XlsxUploader';
 import GroupUploader from '$lib/components/engine/GroupUploader';
 import ConfigPanel from '$lib/components/engine/ConfigPanel';
+import PenaltySelector from '$lib/components/engine/PenaltySelector';
 import ResultDisplay from '$lib/components/engine/ResultDisplay';
 
 /** 排座引擎主页面 */
@@ -34,13 +36,31 @@ export default function SeatingEnginePage() {
 	const [result, setResult] = createSignal<SeatingResult | null>(null);
 	const [error, setError] = createSignal('');
 	const [dataReady, setDataReady] = createSignal(false);
+	const [excludedNames, setExcludedNames] = createSignal<string[]>([]);
+	const [studentNames, setStudentNames] = createSignal<string[]>([]);
 
-	function handleDataReady(data: { currentRows: (string | number | null)[][]; prevRows: (string | number | null)[][] }) {
+	function extractStudentNames(rows: (string | number | null)[][]): string[] {
+		const names: string[] = [];
+		for (let i = 1; i < rows.length; i++) {
+			const row = rows[i];
+			if (!row || row.length === 0) continue;
+			const name = String(row[0] ?? '').trim();
+			if (name) names.push(name);
+		}
+		return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+	}
+
+	function handleDataReady(data: {
+		currentRows: (string | number | null)[][];
+		prevRows: (string | number | null)[][];
+	}) {
 		setCurrentRows(data.currentRows);
 		setPrevRows(data.prevRows);
 		setDataReady(true);
 		setError('');
 		setResult(null);
+		setExcludedNames([]);
+		setStudentNames(extractStudentNames(data.currentRows));
 	}
 
 	function handleRun() {
@@ -54,7 +74,7 @@ export default function SeatingEnginePage() {
 				setError(i18n().engine.errors.noStudents);
 				return;
 			}
-			const res = generateSeatingArrangement(students, config());
+			const res = generateSeatingArrangement(students, config(), new Set(excludedNames()));
 			setResult(res);
 			setError('');
 		} catch (err) {
@@ -76,6 +96,13 @@ export default function SeatingEnginePage() {
 						<XlsxUploader onDataReady={handleDataReady} />
 						<GroupUploader onGroupMapLoaded={setGroupMap} />
 						<ConfigPanel config={config()} onChange={setConfig} />
+						{dataReady() && studentNames().length > 0 && (
+							<PenaltySelector
+								studentNames={studentNames()}
+								selected={excludedNames()}
+								onChange={setExcludedNames}
+							/>
+						)}
 					</div>
 					<div class="engine-sidebar-footer">
 						<button class="btn btn-primary" onClick={handleRun}>
@@ -93,35 +120,57 @@ export default function SeatingEnginePage() {
 
 				<div class="engine-content">
 					<ResultDisplay result={result()} />
-				{result() && (
-					<div style={{ 'margin-top': '16px', display: 'flex', gap: '12px', 'align-self': 'flex-start' }}>
-						<button
-							class="btn btn-primary"
-							onClick={() => {
-								const names = flattenSeatingResultWithDividers(result()!);
-								saveResultToStorage(names);
-								navigate('/');
+					{result() && (
+						<div
+							style={{
+								'margin-top': '16px',
+								display: 'flex',
+								gap: '12px',
+								'align-self': 'flex-start'
 							}}
 						>
-							{i18n().engine.actions.importToSeats}
-						</button>
-						<button
-							class="btn btn-mid"
-							onClick={() => {
-								const json = exportResultToJSON(result()!);
-								const blob = new Blob([json], { type: 'application/json' });
-								const url = URL.createObjectURL(blob);
-								const a = document.createElement('a');
-								a.href = url;
-								a.download = `alchemy-result-${new Date().toISOString().slice(0, 10)}.json`;
-								a.click();
-								URL.revokeObjectURL(url);
-							}}
-						>
-							{i18n().engine.actions.downloadJSON}
-						</button>
-					</div>
-				)}
+							<button
+								class="btn btn-primary"
+								onClick={() => {
+									const names = flattenSeatingResultWithDividers(result()!);
+									saveResultToStorage(names);
+									navigate('/');
+								}}
+							>
+								{i18n().engine.actions.importToSeats}
+							</button>
+							<button
+								class="btn btn-mid"
+								onClick={() => {
+									const json = exportResultToJSON(result()!);
+									const blob = new Blob([json], { type: 'application/json' });
+									const url = URL.createObjectURL(blob);
+									const a = document.createElement('a');
+									a.href = url;
+									a.download = `alchemy-result-${new Date().toISOString().slice(0, 10)}.json`;
+									a.click();
+									URL.revokeObjectURL(url);
+								}}
+							>
+								{i18n().engine.actions.downloadJSON}
+							</button>
+							<button
+								class="btn btn-mid"
+								onClick={() => {
+									const txt = exportResultToTXT(result()!);
+									const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+									const url = URL.createObjectURL(blob);
+									const a = document.createElement('a');
+									a.href = url;
+									a.download = `alchemy-result-${new Date().toISOString().slice(0, 10)}.txt`;
+									a.click();
+									URL.revokeObjectURL(url);
+								}}
+							>
+								{i18n().engine.actions.downloadTXT}
+							</button>
+						</div>
+					)}
 				</div>
 			</main>
 		</div>

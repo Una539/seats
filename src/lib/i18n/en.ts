@@ -35,7 +35,7 @@ export const en = {
 		exportXlsx: 'Export XLSX'
 	},
 	grid: {
-		 aisle: 'Aisle'
+		aisle: 'Aisle'
 	},
 	usage: {
 		assignTitle: 'Assigning Warriors',
@@ -74,7 +74,8 @@ export const en = {
 		},
 		actions: {
 			importToSeats: 'Import result to Seat Arranger',
-			downloadJSON: 'Download Alchemy Recipe (.json)'
+			downloadJSON: 'Download Alchemy Recipe (.json)',
+			downloadTXT: 'Export Readable Report (.txt)'
 		},
 		xlsx: {
 			sectionTitle: 'Alchemy Materials',
@@ -82,7 +83,8 @@ export const en = {
 			uploaded: 'Recipe Logged',
 			currentSheet: 'Current Trial Sheet',
 			prevSheet: 'Previous Trial Sheet',
-			parsed: (cur: string, prev: string, count: number) => `Parsed ${cur} & ${prev}, ${count} warriors total`,
+			parsed: (cur: string, prev: string, count: number) =>
+				`Parsed ${cur} & ${prev}, ${count} warriors total`,
 			previewCurrent: 'Current Trial Preview',
 			previewPrev: 'Previous Trial Preview',
 			previewStudent: 'Warrior',
@@ -118,13 +120,19 @@ export const en = {
 			rank6Plus: '6-10 per rank up',
 			rank1To5: '1-5 per rank up'
 		},
+		penalty: {
+			sectionTitle: 'Exile List',
+			searchPlaceholder: 'Search names...',
+			selectedCount: (count: number) => `${count} selected`
+		},
 		result: {
 			sectionTitle: 'Transmutation Result',
 			privilege: 'The Chosen',
 			progress: 'Comeback Heroes',
 			group: 'Strongest Guild',
 			lottery: 'Wheel of Fate',
-			peopleCount: (count: number) => `${count} warriors`
+			peopleCount: (count: number) => `${count} warriors`,
+			excludedReason: 'Exiled: Under Punishment'
 		}
 	},
 	subjects: {

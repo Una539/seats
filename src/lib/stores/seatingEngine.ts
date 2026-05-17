@@ -79,11 +79,7 @@ export function flattenSeatingResultWithDividers(result: SeatingResult): string[
 		}
 	}
 
-	const privilegeOrder = [
-		'--- 天选·综合 ---',
-		'--- 天选·炼金数学 ---',
-		'--- 天选·其他学派 ---'
-	];
+	const privilegeOrder = ['--- 天选·综合 ---', '--- 天选·炼金数学 ---', '--- 天选·其他学派 ---'];
 
 	for (const groupKey of privilegeOrder) {
 		const members = privilegeGroups[groupKey];
@@ -323,7 +319,8 @@ export function buildStudentData(
 // 核心规则
 export function generateSeatingArrangement(
 	students: Student[],
-	config: SeatingConfig = DefaultSeatingConfig
+	config: SeatingConfig = DefaultSeatingConfig,
+	excludedIds: Set<string> = new Set()
 ): SeatingResult {
 	const selectedIds = new Set<string>();
 	const result: SeatingResult = {
@@ -345,17 +342,22 @@ export function generateSeatingArrangement(
 
 	// 1. 班级前 N 名优先（按年级排名动态计算出的班排）
 	// 处理并列：取前 N 名时，如果第 N 名有并列，全部算上
+	// 被惩罚的学生跳过，名额顺延给下一位
 	const sortedByClassRank = [...students].sort((a, b) => a.classRank - b.classRank);
 	const topClass: Student[] = [];
-	if (sortedByClassRank.length > 0) {
-		const cutoffIndex = Math.min(config.privilegeClassTopN - 1, sortedByClassRank.length - 1);
-		const cutoffRank = sortedByClassRank[cutoffIndex].classRank;
-		for (const s of sortedByClassRank) {
-			if (s.classRank <= cutoffRank) {
-				topClass.push(s);
-			} else {
-				break;
-			}
+	let validCount = 0;
+	let cutoffRank = Infinity;
+
+	for (const s of sortedByClassRank) {
+		if (excludedIds.has(s.id)) continue;
+		validCount++;
+		if (validCount <= config.privilegeClassTopN) {
+			topClass.push(s);
+			cutoffRank = s.classRank;
+		} else if (s.classRank === cutoffRank) {
+			topClass.push(s);
+		} else {
+			break;
 		}
 	}
 	topClass.forEach((s) =>
@@ -366,27 +368,17 @@ export function generateSeatingArrangement(
 		)
 	);
 
-	// 2. 数学单科年级前 N 名
+	// 2. 数学单科年级前 N 名（被惩罚者跳过）
 	const topMath = students
-		.filter((s) => s.subjects.math.rank <= config.privilegeMathSchoolTopN)
+		.filter((s) => s.subjects.math.rank <= config.privilegeMathSchoolTopN && !excludedIds.has(s.id))
 		.sort((a, b) => a.subjects.math.rank - b.subjects.math.rank);
 	topMath.forEach((s) =>
-		addToBatch(
-			s,
-			result.privilegeBatch,
-			`天选·炼金数学: 全服第${s.subjects.math.rank}名`
-		)
+		addToBatch(s, result.privilegeBatch, `天选·炼金数学: 全服第${s.subjects.math.rank}名`)
 	);
 
 	// 3. 其他各科单科特权，遇冲突往下顺延，每科 quota 个名额
 	// 注：数学已在步骤2单独处理，此处不再重复
-	const subjectsOrder: SubjectKey[] = [
-		'chinese',
-		'english',
-		'physics',
-		'chemistry',
-		'biology'
-	];
+	const subjectsOrder: SubjectKey[] = ['chinese', 'english', 'physics', 'chemistry', 'biology'];
 	for (const subjKey of subjectsOrder) {
 		const sortedBySubject = [...students].sort(
 			(a, b) => a.subjects[subjKey].rank - b.subjects[subjKey].rank
@@ -395,29 +387,33 @@ export function generateSeatingArrangement(
 		let quota = config.subjectPrivilegeQuota;
 		for (const s of sortedBySubject) {
 			if (quota <= 0) break;
-			if (!selectedIds.has(s.id)) {
-				addToBatch(
-					s,
-					result.privilegeBatch,
-					`${SubjectNames[subjKey]} 特权顺延 (学派第${s.subjects[subjKey].rank}名)`
-				);
-				quota--;
-			}
+			if (selectedIds.has(s.id)) continue;
+			if (excludedIds.has(s.id)) continue;
+			addToBatch(
+				s,
+				result.privilegeBatch,
+				`${SubjectNames[subjKey]} 特权顺延 (学派第${s.subjects[subjKey].rank}名)`
+			);
+			quota--;
 		}
 	}
 
-	// 4. 数学的额外特殊兜底（分数线以上特权）
+	// 4. 数学的额外特殊兜底（分数线以上特权，被惩罚者跳过）
 	students.forEach((s) => {
-		if (s.subjects.math.score >= config.privilegeMathScoreThreshold && !selectedIds.has(s.id)) {
+		if (
+			s.subjects.math.score >= config.privilegeMathScoreThreshold &&
+			!selectedIds.has(s.id) &&
+			!excludedIds.has(s.id)
+		) {
 			addToBatch(s, result.privilegeBatch, `炼金·数学极优: ${s.subjects.math.score}分`);
 		}
 	});
 
 	// --- 阶段二：积分逆袭排位 ---
 
-	// 选出尚未排座且有进步的人
+	// 选出尚未排座且有进步的人（被惩罚者跳过）
 	let progressCandidates = students
-		.filter((s) => !selectedIds.has(s.id) && s.progressScore > 0)
+		.filter((s) => !selectedIds.has(s.id) && !excludedIds.has(s.id) && s.progressScore > 0)
 		.sort((a, b) => b.progressScore - a.progressScore); // 积分高者优先
 
 	if (config.progressMode === 'topN') {
@@ -456,9 +452,9 @@ export function generateSeatingArrangement(
 		}
 	});
 
-	// 捞出第一名小组还没选座位的人
+	// 捞出第一名小组还没选座位的人（被惩罚者跳过）
 	const bestGroupMembers = students.filter(
-		(s) => s.groupId === bestGroupId && !selectedIds.has(s.id)
+		(s) => s.groupId === bestGroupId && !selectedIds.has(s.id) && !excludedIds.has(s.id)
 	);
 	bestGroupMembers.forEach((s) => {
 		addToBatch(s, result.groupBatch, `最强公会福利: ${bestGroupId}号公会平均分全服第一`);
@@ -466,9 +462,17 @@ export function generateSeatingArrangement(
 
 	// --- 阶段四：命运兜底抽签 ---
 
-	const remaining = students.filter((s) => !selectedIds.has(s.id));
+	// 被惩罚的学生直接放入命运轮盘
+	students.forEach((s) => {
+		if (excludedIds.has(s.id) && !selectedIds.has(s.id)) {
+			addToBatch(s, result.lotteryBatch, '放逐: 受惩罚');
+		}
+	});
+
+	// 剩余未触发任何奖励的学生
+	const remaining = students.filter((s) => !selectedIds.has(s.id) && !excludedIds.has(s.id));
 	remaining.forEach((s) => {
-		addToBatch(s, result.lotteryBatch, `未触发任何奖励，进入命运轮盘`);
+		addToBatch(s, result.lotteryBatch, '未触发任何奖励，进入命运轮盘');
 	});
 
 	return result;
@@ -488,6 +492,178 @@ export function exportResultToJSON(result: SeatingResult): string {
 		result
 	};
 	return JSON.stringify(payload, null, 2);
+}
+
+/** 将排座结果导出为人类可读的 TXT 格式 */
+export function exportResultToTXT(result: SeatingResult): string {
+	const now = new Date();
+	const timeStr = now.toISOString().slice(0, 19).replace('T', ' ');
+
+	const lines: string[] = [];
+	lines.push('【炼金术座位分配结果】');
+	lines.push(`生成时间：${timeStr}`);
+	lines.push('版本：seats-v1');
+	lines.push('');
+	lines.push('════════════════════════════════════════════════════════');
+	lines.push('一、天选特权批次');
+	lines.push('════════════════════════════════════════════════════════');
+	lines.push('');
+
+	// 特权批次内部按子类别分组
+	const privilegeGroups: Record<string, Array<{ name: string; reason: string }>> = {
+		'天选·综合': [],
+		'天选·炼金数学': [],
+		'天选·其他学派': []
+	};
+
+	for (const item of result.privilegeBatch) {
+		if (item.reason.startsWith('天选·综合')) {
+			privilegeGroups['天选·综合'].push(item);
+		} else if (
+			item.reason.startsWith('天选·炼金数学') ||
+			item.reason.startsWith('炼金·数学极优') ||
+			item.reason.startsWith('炼金·数学单科特权顺延')
+		) {
+			privilegeGroups['天选·炼金数学'].push(item);
+		} else if (item.reason.includes('特权顺延')) {
+			privilegeGroups['天选·其他学派'].push(item);
+		}
+	}
+
+	// 天选·综合
+	if (privilegeGroups['天选·综合'].length > 0) {
+		lines.push('【天选·综合排名】');
+		for (const item of privilegeGroups['天选·综合']) {
+			const match = item.reason.match(/公会第(\d+)名\(全服第(\d+)名\)/);
+			if (match) {
+				lines.push(`${item.name.padEnd(8)} 公会第${match[1]}名 (全服第${match[2]}名)`);
+			} else {
+				lines.push(`${item.name.padEnd(8)} ${item.reason}`);
+			}
+		}
+		lines.push('');
+	}
+
+	// 天选·炼金数学
+	if (privilegeGroups['天选·炼金数学'].length > 0) {
+		lines.push('【天选·炼金数学】');
+		for (const item of privilegeGroups['天选·炼金数学']) {
+			const match = item.reason.match(/全服第(\d+)名/);
+			if (match) {
+				lines.push(`${item.name.padEnd(8)} 全服第${match[1]}名`);
+			} else {
+				lines.push(`${item.name.padEnd(8)} ${item.reason}`);
+			}
+		}
+		lines.push('');
+	}
+
+	// 其他学派
+	if (privilegeGroups['天选·其他学派'].length > 0) {
+		for (const item of privilegeGroups['天选·其他学派']) {
+			const match = item.reason.match(/^(.+?) 特权顺延 \(学派第(\d+)名\)/);
+			if (match) {
+				lines.push(`【${match[1]} 特权顺延】`);
+				lines.push(`${item.name.padEnd(8)} 学派第${match[2]}名`);
+			} else {
+				lines.push(`${item.name.padEnd(8)} ${item.reason}`);
+			}
+		}
+		lines.push('');
+	}
+
+	// 逆袭勇者
+	if (result.progressBatch.length > 0) {
+		lines.push('════════════════════════════════════════════════════════');
+		lines.push('二、逆袭勇者 (进步奖励)');
+		lines.push('════════════════════════════════════════════════════════');
+		lines.push('');
+		lines.push('姓名        积分    全服排名      进步名次');
+		for (const item of result.progressBatch) {
+			const match = item.reason.match(/积分(\d+) \(全服(\d+)名 🚀 (\d+)名\)/);
+			if (match) {
+				const score = match[1];
+				const prevRank = match[2];
+				const currRank = match[3];
+				const progress = Number(prevRank) - Number(currRank);
+				lines.push(
+					`${item.name.padEnd(10)} ${score.padEnd(7)} ${prevRank.padEnd(5)}名         ↑${progress}名`
+				);
+			} else {
+				lines.push(`${item.name.padEnd(10)} ${item.reason}`);
+			}
+		}
+		lines.push('');
+	}
+
+	// 最强公会
+	if (result.groupBatch.length > 0) {
+		lines.push('════════════════════════════════════════════════════════');
+		lines.push('三、最强公会福利');
+		lines.push('════════════════════════════════════════════════════════');
+		lines.push('');
+		const match = result.groupBatch[0]?.reason.match(/(\d+)号公会平均分全服第一/);
+		if (match) {
+			lines.push(`${match[1]}号公会平均分全服第一：`);
+		} else {
+			lines.push('最强公会福利：');
+		}
+		lines.push(result.groupBatch.map((s) => s.name).join('、'));
+		lines.push('');
+	}
+
+	// 放逐与命运轮盘
+	if (result.lotteryBatch.length > 0) {
+		lines.push('════════════════════════════════════════════════════════');
+		lines.push('四、放逐与命运轮盘');
+		lines.push('════════════════════════════════════════════════════════');
+		lines.push('');
+
+		const exiled = result.lotteryBatch.filter((s) => s.reason === '放逐: 受惩罚');
+		const lottery = result.lotteryBatch.filter((s) => s.reason !== '放逐: 受惩罚');
+
+		if (exiled.length > 0) {
+			lines.push('【放逐 - 受惩罚】');
+			lines.push(exiled.map((s) => s.name).join('、'));
+			lines.push('');
+		}
+
+		if (lottery.length > 0) {
+			lines.push('【命运轮盘 - 未触发奖励】');
+			// 每行显示5个名字
+			const names = lottery.map((s) => s.name);
+			for (let i = 0; i < names.length; i += 5) {
+				lines.push(names.slice(i, i + 5).join('、'));
+			}
+			lines.push('');
+		}
+	}
+
+	// 人数统计
+	const total =
+		result.privilegeBatch.length +
+		result.progressBatch.length +
+		result.groupBatch.length +
+		result.lotteryBatch.length;
+
+	lines.push('════════════════════════════════════════════════════════');
+	lines.push('');
+	lines.push('【人数统计】');
+	lines.push(`特权批次：   ${String(result.privilegeBatch.length).padStart(2)}人`);
+	lines.push(`逆袭勇者：   ${String(result.progressBatch.length).padStart(2)}人`);
+	lines.push(`公会福利：   ${String(result.groupBatch.length).padStart(2)}人`);
+	lines.push(
+		`放逐：       ${String(result.lotteryBatch.filter((s) => s.reason === '放逐: 受惩罚').length).padStart(2)}人`
+	);
+	lines.push(
+		`命运轮盘：   ${String(result.lotteryBatch.filter((s) => s.reason !== '放逐: 受惩罚').length).padStart(2)}人`
+	);
+	lines.push('════════════════════════════════════════════════════════');
+	lines.push(`总计：       ${String(total).padStart(2)}人`);
+	lines.push('════════════════════════════════════════════════════════');
+	lines.push('');
+
+	return lines.join('\n');
 }
 
 /** 从 JSON 字符串解析排座引擎结果，返回带分隔符的名单数组 */

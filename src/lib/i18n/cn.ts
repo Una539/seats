@@ -35,7 +35,7 @@ export const cn = {
 		exportXlsx: '导出 XLSX'
 	},
 	grid: {
-		 aisle: '过道'
+		aisle: '过道'
 	},
 	usage: {
 		assignTitle: '分配勇士',
@@ -74,7 +74,8 @@ export const cn = {
 		},
 		actions: {
 			importToSeats: '将炼成结果导入座位编排',
-			downloadJSON: '下载炼金配方 (.json)'
+			downloadJSON: '下载炼金配方 (.json)',
+			downloadTXT: '导出可读报告 (.txt)'
 		},
 		xlsx: {
 			sectionTitle: '炼金原料',
@@ -82,7 +83,8 @@ export const cn = {
 			uploaded: '配方已录入',
 			currentSheet: '本次试炼 Sheet',
 			prevSheet: '上次试炼 Sheet',
-			parsed: (cur: string, prev: string, count: number) => `已解析 ${cur} 与 ${prev}，共 ${count} 名勇士`,
+			parsed: (cur: string, prev: string, count: number) =>
+				`已解析 ${cur} 与 ${prev}，共 ${count} 名勇士`,
 			previewCurrent: '本次试炼预览',
 			previewPrev: '上次试炼预览',
 			previewStudent: '勇士',
@@ -118,13 +120,19 @@ export const cn = {
 			rank6Plus: '6-10 每前进1名',
 			rank1To5: '1-5 每前进1名'
 		},
+		penalty: {
+			sectionTitle: '放逐名单',
+			searchPlaceholder: '搜索姓名...',
+			selectedCount: (count: number) => `已选择 ${count} 人`
+		},
 		result: {
 			sectionTitle: '炼成结果',
 			privilege: '天选之人',
 			progress: '逆袭勇者',
 			group: '最强公会',
 			lottery: '命运轮盘',
-			peopleCount: (count: number) => `${count} 人`
+			peopleCount: (count: number) => `${count} 人`,
+			excludedReason: '放逐: 受惩罚'
 		}
 	},
 	subjects: {
