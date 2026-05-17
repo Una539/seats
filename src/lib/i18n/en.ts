@@ -21,51 +21,118 @@
 export const en = {
 	layout: {
 		title: 'Seats',
-		subtitle: 'Classroom Seat Assignment Manager'
+		subtitle: 'Classroom Seat Transmutation System'
 	},
 	modes: {
-		fill: 'Fill',
-		remove: 'Remove'
+		fill: 'Sit Down',
+		remove: 'Yeet'
 	},
 	sidebar: {
-		title: 'List',
-		pending: 'Pending',
-		browseFile: 'Browse File',
-		randomFill: 'Random Fill',
+		title: 'Warriors to Summon',
+		pending: 'Awaiting Summon',
+		browseFile: 'Summon List',
+		randomFill: '🎲 Random Summon',
 		exportXlsx: 'Export XLSX'
 	},
 	grid: {
-		aisle: 'Aisle'
-	},
-	states: {
-		empty: 'Empty',
-		filled: 'Filled',
-		disabled: 'Disabled',
-		aisle: 'Aisle'
+		 aisle: 'Aisle'
 	},
 	usage: {
-		assignTitle: 'Assigning Students',
-		assignStep1: 'Click a name in the right sidebar list to select it',
-		assignStep2: 'Click any empty cell in the grid to assign that student',
-		assignStep3: 'The name disappears from the list after assignment',
-		swapTitle: 'Swapping Two Students',
-		swapStep1: 'In Fill mode, click a filled cell — it highlights as "swap selected"',
-		swapStep2: 'Click another filled cell to swap the two students',
-		swapStep3: 'A brief flash animation confirms the swap',
-		removeTitle: 'Removing a Student',
-		removeStep1: 'Switch to Remove mode (red underline indicator)',
-		removeStep2: 'Click a filled cell — it turns red to confirm',
-		removeStep3: 'Click again to confirm removal; the name returns to the list',
+		assignTitle: 'Assigning Warriors',
+		assignStep1: 'Click a warrior name in the right sidebar to select them',
+		assignStep2: 'Click any vacant seat to assign that warrior',
+		assignStep3: 'The name vanishes from the list after summoning',
+		swapTitle: 'Swapping Two Warriors',
+		swapStep1: 'In Sit Down mode, click an occupied seat — it highlights as "swap selected"',
+		swapStep2: 'Click another occupied seat to swap the two warriors',
+		swapStep3: 'A brief flash confirms the transmutation',
+		removeTitle: 'Yeeting a Warrior',
+		removeStep1: 'Switch to Yeet mode (red underline indicator)',
+		removeStep2: 'Click an occupied seat — it turns red to confirm',
+		removeStep3: 'Click again to confirm yeeting; the name returns to the list',
 		aisleTitle: 'Managing Aisles',
 		aisleStep1: 'Click column buttons above the grid to toggle a column as an aisle',
-		aisleStep2: 'Students in that column are displaced back to the list',
+		aisleStep2: 'Warriors in that column are displaced back to the list',
 		aisleStep3: 'The column button turns dark to indicate aisle status',
-		bulkTitle: 'Bulk Enable/Disable Seats',
-		bulkDisableStep1: 'In Fill mode with no name selected, click an empty cell to start',
-		bulkDisableStep2: 'Click another cell to define a rectangle — all empty cells highlight',
-		bulkDisableStep3: 'Click again to confirm and disable all highlighted cells',
-		bulkEnableStep1: 'Click a disabled cell to start batch selection',
-		bulkEnableStep2: 'Click another cell to define the batch area',
-		bulkEnableStep3: 'Click again to confirm and enable all cells'
+		bulkTitle: 'Bulk Seal/Unseal Seats',
+		bulkDisableStep1: 'In Sit Down mode with no warrior selected, click a vacant seat to start',
+		bulkDisableStep2: 'Click another seat to define a rectangle — all vacant seats highlight',
+		bulkDisableStep3: 'Click again to seal all highlighted cells',
+		bulkEnableStep1: 'Click a sealed cell to start batch selection',
+		bulkEnableStep2: 'Click another seat to define the batch area',
+		bulkEnableStep3: 'Click again to unseal all cells'
+	},
+	engine: {
+		pageTitle: 'Seat Transmutation Altar',
+		backToHome: '← Back to Seat Arranger',
+		run: '🔮 Activate Transmutation!',
+		dataReady: 'Materials Ready',
+		errors: {
+			noFile: 'Please upload the transmutation materials first',
+			noStudents: 'No summonable warriors detected. Check your recipe.',
+			calcFailed: 'Transmutation failed: '
+		},
+		actions: {
+			importToSeats: 'Import result to Seat Arranger',
+			downloadJSON: 'Download Alchemy Recipe (.json)'
+		},
+		xlsx: {
+			sectionTitle: 'Alchemy Materials',
+			uploadBtn: 'Upload Recipe Book',
+			uploaded: 'Recipe Logged',
+			currentSheet: 'Current Trial Sheet',
+			prevSheet: 'Previous Trial Sheet',
+			parsed: (cur: string, prev: string, count: number) => `Parsed ${cur} & ${prev}, ${count} warriors total`,
+			previewCurrent: 'Current Trial Preview',
+			previewPrev: 'Previous Trial Preview',
+			previewStudent: 'Warrior',
+			previewRank: 'Server Rank',
+			totalPeople: (count: number) => `${count} warriors total`
+		},
+		groups: {
+			sectionTitle: 'Guild Registry',
+			loaded: 'Assembled',
+			groupCount: (count: number) => `${count} Guilds`,
+			source: 'Source',
+			defaultSource: 'Default Guilds',
+			uploadBtn: 'Upload Custom Guild Registry',
+			groupLabel: (id: number) => `Guild ${id}`,
+			membersEllipsis: (count: number) => `and ${count} others`
+		},
+		config: {
+			sectionTitle: 'Alchemy Rules',
+			resetDefaults: 'Reset Recipe',
+			classTopN: 'Guild Elite Top N',
+			mathSchoolTopN: 'Alchemy: Math Server Top N',
+			mathScoreThreshold: 'Alchemy: Math Threshold',
+			subjectQuota: 'School Privilege Quota',
+			progressMode: 'Comeback Mode',
+			progressModeAll: 'All Comebacks',
+			progressModeTopN: 'Top N Comebacks',
+			progressTopN: 'Comeback Top N',
+			weightsToggle: 'Score Weight Recipe',
+			rank401Plus: '401+ per rank up',
+			rank201Plus: '201-400 per rank up',
+			rank101Plus: '101-200 per rank up',
+			rank11Plus: '11-100 per rank up',
+			rank6Plus: '6-10 per rank up',
+			rank1To5: '1-5 per rank up'
+		},
+		result: {
+			sectionTitle: 'Transmutation Result',
+			privilege: 'The Chosen',
+			progress: 'Comeback Heroes',
+			group: 'Strongest Guild',
+			lottery: 'Wheel of Fate',
+			peopleCount: (count: number) => `${count} warriors`
+		}
+	},
+	subjects: {
+		chinese: 'Verbal Arts: Chinese',
+		math: 'Alchemy: Math',
+		english: 'Foreign Tongue: English',
+		physics: 'Arcane: Physics',
+		chemistry: 'Potions: Chemistry',
+		biology: 'Life: Biology'
 	}
 } as const;

@@ -60,7 +60,11 @@ export default function GridCell(props: Props) {
 				) : null
 			) : (
 				<td class={cellClasses()} onClick={() => props.onClick(props.row, props.col)}>
-					{props.cell}
+					{props.cell || (
+						<span class="coord-label">
+							{String.fromCharCode(65 + props.row)}{props.col + 1}
+						</span>
+					)}
 				</td>
 			)}
 		</>

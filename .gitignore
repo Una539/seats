@@ -26,3 +26,9 @@ Thumbs.db
 .idea/
 *.swp
 *~
+
+# Data / Local files
+static/group2.json
+*成绩单*.xlsx
+*成绩单*.json
+group2*.json

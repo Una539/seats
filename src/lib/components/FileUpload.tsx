@@ -28,7 +28,7 @@ export default function FileUpload(props: Props) {
 				<span>{i18n().sidebar.browseFile}</span>
 				<input
 					type="file"
-					accept=".txt"
+					accept=".txt,.json"
 					style={{ display: 'none' }}
 					onChange={props.onFileUpload}
 				/>

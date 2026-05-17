@@ -4,6 +4,7 @@
  * This file is part of seats.
  */
 
+import { A } from '@solidjs/router';
 import { localeStore, t } from '$lib/i18n';
 import FileUpload from './FileUpload';
 import NameList from './NameList';
@@ -34,6 +35,9 @@ export default function Sidebar(props: Props) {
 		<aside class="sidebar">
 			<div class="sidebar-header">
 				<span class="sidebar-title">{i18n().sidebar.title}</span>
+				<A href="/engine" class="nav-link">
+					{i18n().engine.pageTitle}
+				</A>
 				{/* 语言切换按钮：当前为英文时显示 "中文"，反之显示 "EN" */}
 				<button class="lang-toggle" onClick={props.onToggleLocale}>
 					{localeStore.locale() === 'en' ? '中文' : 'EN'}
