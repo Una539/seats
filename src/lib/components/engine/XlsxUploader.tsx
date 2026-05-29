@@ -9,7 +9,11 @@ import { t } from '$lib/i18n';
 import * as ExcelJS from 'exceljs';
 
 interface Props {
-	onDataReady: (data: { currentRows: (string | number | null)[][]; prevRows: (string | number | null)[][] }) => void;
+	onDataReady: (data: {
+		currentRows: (string | number | null)[][];
+		prevRows: (string | number | null)[][];
+		fileName: string;
+	}) => void;
 }
 
 function sheetToArray(worksheet: ExcelJS.Worksheet): (string | number | null)[][] {
@@ -35,7 +39,9 @@ function PreviewTable(props: { rows: (string | number | null)[][]; title: string
 				<thead>
 					<tr>
 						<td class="preview-th">{i18n().engine.xlsx.previewStudent}</td>
-						<td class="preview-th" style={{ 'text-align': 'right' }}>{i18n().engine.xlsx.previewRank}</td>
+						<td class="preview-th" style={{ 'text-align': 'right' }}>
+							{i18n().engine.xlsx.previewRank}
+						</td>
 					</tr>
 				</thead>
 				<tbody>
@@ -135,7 +141,8 @@ export default function XlsxUploader(props: Props) {
 
 		props.onDataReady({
 			currentRows: curData,
-			prevRows: preData
+			prevRows: preData,
+			fileName: fileName()
 		});
 	});
 
@@ -158,7 +165,11 @@ export default function XlsxUploader(props: Props) {
 				<div class="engine-form" style={{ 'margin-top': '12px' }}>
 					<div class="engine-field">
 						<label>{i18n().engine.xlsx.currentSheet}</label>
-						<select class="input" value={currentSheet()} onChange={(e) => setCurrentSheet(e.currentTarget.value)}>
+						<select
+							class="input"
+							value={currentSheet()}
+							onChange={(e) => setCurrentSheet(e.currentTarget.value)}
+						>
 							{sheetNames().map((name) => (
 								<option value={name}>{name}</option>
 							))}
@@ -166,7 +177,11 @@ export default function XlsxUploader(props: Props) {
 					</div>
 					<div class="engine-field">
 						<label>{i18n().engine.xlsx.prevSheet}</label>
-						<select class="input" value={prevSheet()} onChange={(e) => setPrevSheet(e.currentTarget.value)}>
+						<select
+							class="input"
+							value={prevSheet()}
+							onChange={(e) => setPrevSheet(e.currentTarget.value)}
+						>
 							{sheetNames().map((name) => (
 								<option value={name}>{name}</option>
 							))}
@@ -174,8 +189,16 @@ export default function XlsxUploader(props: Props) {
 					</div>
 				</div>
 			)}
-			{success() && <p class="success" style={{ 'margin-top': '8px' }}>{success()}</p>}
-			{error() && <p class="error" style={{ 'margin-top': '8px' }}>{error()}</p>}
+			{success() && (
+				<p class="success" style={{ 'margin-top': '8px' }}>
+					{success()}
+				</p>
+			)}
+			{error() && (
+				<p class="error" style={{ 'margin-top': '8px' }}>
+					{error()}
+				</p>
+			)}
 			{hasPreview() && (
 				<div class="preview-section">
 					<PreviewTable rows={currentRows()} title={i18n().engine.xlsx.previewCurrent} />

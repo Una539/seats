@@ -52,16 +52,6 @@ export function useAppState() {
 			clearResultStorage();
 			return;
 		}
-
-		// 没有引擎结果，加载默认名单
-		try {
-			const res = await fetch('/names.txt');
-			const text = await res.text();
-			setLines(text.split(/\r?\n/).filter((line) => line.trim() !== ''));
-			setFileName('names.txt');
-		} catch (err) {
-			setError('默认列表加载失败: ' + (err as Error).message);
-		}
 	}
 
 	init();

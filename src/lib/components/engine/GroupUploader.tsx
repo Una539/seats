@@ -24,7 +24,16 @@ const defaultGroupData: GroupData = {
 		},
 		{
 			id: 2,
-			members: ['诺顿', '陈墨瞳', '苏小暖', '赵孟华', '古德里安', '弗罗斯特', '瓦尔特', '克里斯蒂娜']
+			members: [
+				'诺顿',
+				'陈墨瞳',
+				'苏小暖',
+				'赵孟华',
+				'古德里安',
+				'弗罗斯特',
+				'瓦尔特',
+				'克里斯蒂娜'
+			]
 		},
 		{
 			id: 3,
@@ -32,11 +41,32 @@ const defaultGroupData: GroupData = {
 		},
 		{
 			id: 4,
-			members: ['雷娜塔', '薇拉', '潘西', '奇兰', '兰斯洛特', '弗拉梅尔', '所罗门', '李元衡', '楚天骄']
+			members: [
+				'雷娜塔',
+				'薇拉',
+				'潘西',
+				'奇兰',
+				'兰斯洛特',
+				'弗拉梅尔',
+				'所罗门',
+				'李元衡',
+				'楚天骄'
+			]
 		},
 		{
 			id: 5,
-			members: ['苏珊', '艾米丽', '克拉斯', '阿尔萨斯', '高卢', '科赫', '帕西', '希尔伯特', '昂热', '布加迪']
+			members: [
+				'苏珊',
+				'艾米丽',
+				'克拉斯',
+				'阿尔萨斯',
+				'高卢',
+				'科赫',
+				'帕西',
+				'希尔伯特',
+				'昂热',
+				'布加迪'
+			]
 		},
 		{
 			id: 6,
@@ -93,14 +123,20 @@ export default function GroupUploader(props: Props) {
 			<div class="meta" style={{ 'margin-bottom': '8px' }}>
 				<span class="meta-label">{i18n().engine.groups.loaded}</span>
 				<span class="meta-value">{i18n().engine.groups.groupCount(groupCount())}</span>
-				<span class="meta-label" style={{ 'margin-left': '8px' }}>{i18n().engine.groups.source}</span>
+				<span class="meta-label" style={{ 'margin-left': '8px' }}>
+					{i18n().engine.groups.source}
+				</span>
 				<span class="meta-value">{fileName()}</span>
 			</div>
 			<label class="btn btn-ghost" style={{ width: 'auto', 'justify-content': 'flex-start' }}>
 				<span>{i18n().engine.groups.uploadBtn}</span>
 				<input type="file" accept=".json" style={{ display: 'none' }} onChange={handleFileUpload} />
 			</label>
-			{error() && <p class="error" style={{ 'margin-top': '8px' }}>{error()}</p>}
+			{error() && (
+				<p class="error" style={{ 'margin-top': '8px' }}>
+					{error()}
+				</p>
+			)}
 			<div class="group-preview">
 				{groupData().groups.map((g) => (
 					<div class="group-preview-item">

@@ -31,6 +31,14 @@ interface Props {
 export default function Sidebar(props: Props) {
 	const i18n = t;
 
+	function handleToggleLocale() {
+		props.onToggleLocale();
+	}
+
+	function handleExitOtaku() {
+		localeStore.exitOtaku();
+	}
+
 	return (
 		<aside class="sidebar">
 			<div class="sidebar-header">
@@ -38,8 +46,28 @@ export default function Sidebar(props: Props) {
 				<A href="/engine" class="nav-link">
 					{i18n().engine.pageTitle}
 				</A>
-				{/* 语言切换按钮：当前为英文时显示 "中文"，反之显示 "EN" */}
-				<button class="lang-toggle" onClick={props.onToggleLocale}>
+				<A href="/stats" class="nav-link">
+					{i18n().stats.pageTitle}
+				</A>
+				{localeStore.isOtaku() && (
+					<span
+						title="退出中二模式"
+						onClick={handleExitOtaku}
+						style={{
+							'font-size': '10px',
+							padding: '2px 5px',
+							background: 'var(--accent-subtle)',
+							color: 'var(--accent)',
+							border: '1px solid var(--accent)',
+							'border-radius': 'var(--radius-sm)',
+							cursor: 'pointer',
+							'font-weight': 600
+						}}
+					>
+						中二
+					</span>
+				)}
+				<button class="lang-toggle" onClick={handleToggleLocale}>
 					{localeStore.locale() === 'en' ? '中文' : 'EN'}
 				</button>
 			</div>

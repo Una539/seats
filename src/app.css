@@ -982,3 +982,65 @@ select.input {
 	cursor: pointer;
 	flex-shrink: 0;
 }
+
+/* ── Statistics Page ─────────────────────────────────────── */
+.stats-table-wrap {
+	overflow: auto;
+	max-height: 520px;
+}
+
+.stats-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12px;
+	table-layout: fixed;
+}
+
+.stats-table th,
+.stats-table td {
+	padding: 6px 10px;
+	border-bottom: 1px solid var(--border);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-family: var(--font-mono);
+	color: var(--text-primary);
+}
+
+.stats-table th {
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--text-muted);
+	background: var(--surface-hover);
+	font-family: var(--font-sans);
+	transition: background var(--duration) var(--ease-out);
+}
+
+.stats-table th:hover {
+	background: var(--border);
+}
+
+.stats-table th.sort-active {
+	color: var(--text-primary);
+	background: var(--border);
+}
+
+.stats-table th .sort-arrow {
+	font-family: var(--font-sans);
+	font-size: 9px;
+	margin-left: 2px;
+}
+
+.stats-table tbody tr:hover {
+	background: var(--surface-hover);
+}
+
+.stats-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.leaderboard-config-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}

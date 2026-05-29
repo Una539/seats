@@ -10,17 +10,17 @@
 
 ## Developer Commands
 
-| Command | What it does |
-|---------|--------------|
-| `pnpm dev` | Start Vite dev server |
-| `pnpm build` | `tsc && vite build` — type-checks first, then bundles to `dist/` |
-| `pnpm preview` | Preview production build locally |
-| `pnpm lint` | `prettier --check . && eslint .` |
-| `pnpm format` | `prettier --write .` |
-| `pnpm test` | Run all tests via `__tests__/run-all-tests.js` |
-| `pnpm test:stores` | Run store logic tests |
-| `pnpm test:export` | Run export logic tests |
-| `pnpm test:i18n` | Run i18n tests |
+| Command            | What it does                                                     |
+| ------------------ | ---------------------------------------------------------------- |
+| `pnpm dev`         | Start Vite dev server                                            |
+| `pnpm build`       | `tsc && vite build` — type-checks first, then bundles to `dist/` |
+| `pnpm preview`     | Preview production build locally                                 |
+| `pnpm lint`        | `prettier --check . && eslint .`                                 |
+| `pnpm format`      | `prettier --write .`                                             |
+| `pnpm test`        | Run all tests via `__tests__/run-all-tests.js`                   |
+| `pnpm test:stores` | Run store logic tests                                            |
+| `pnpm test:export` | Run export logic tests                                           |
+| `pnpm test:i18n`   | Run i18n tests                                                   |
 
 - Tests use Node.js **native test runner**, not Vitest/Jest. Each suite is a standalone `.test.js` file.
 - The custom runner executes all suites and prints a combined summary. Exit code is non-zero on failure.

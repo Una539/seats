@@ -33,9 +33,7 @@ export default function ColumnControls(props: Props) {
 					onClick={() => handleToggle(ci)}
 				>
 					<span class="col-num">{ci + 1}</span>
-					<span
-						class={`col-label${props.grid.aisleColumns().includes(ci) ? ' visible' : ''}`}
-					>
+					<span class={`col-label${props.grid.aisleColumns().includes(ci) ? ' visible' : ''}`}>
 						{i18n().grid.aisle}
 					</span>
 				</button>

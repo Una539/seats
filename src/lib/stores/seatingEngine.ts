@@ -331,7 +331,11 @@ export function generateSeatingArrangement(
 	};
 
 	// 辅助闭包：向批次添加并去重
-	const addToBatch = (s: Student, batch: Array<any>, reason: string) => {
+	const addToBatch = (
+		s: Student,
+		batch: Array<{ name: string; reason: string }>,
+		reason: string
+	) => {
 		if (!selectedIds.has(s.id)) {
 			batch.push({ name: s.name, reason });
 			selectedIds.add(s.id);

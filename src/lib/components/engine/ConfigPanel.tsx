@@ -61,7 +61,11 @@ export default function ConfigPanel(props: Props) {
 		<div class="engine-section">
 			<div class="engine-section-title">
 				{i18n().engine.config.sectionTitle}
-				<button class="btn btn-ghost" style={{ width: 'auto', padding: '2px 6px', 'font-size': '11px' }} onClick={resetDefaults}>
+				<button
+					class="btn btn-ghost"
+					style={{ width: 'auto', padding: '2px 6px', 'font-size': '11px' }}
+					onClick={resetDefaults}
+				>
 					{i18n().engine.config.resetDefaults}
 				</button>
 			</div>

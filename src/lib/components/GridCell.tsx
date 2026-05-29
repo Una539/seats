@@ -42,19 +42,15 @@ export default function GridCell(props: Props) {
 	});
 
 	/** 过道单元格的样式类，支持待恢复高亮 */
-	const aisleClass = createMemo(() =>
-		`aisle-cell${props.grid.pendingEnable().has(`0-${props.col}`) ? ' pending-enable' : ''}`
+	const aisleClass = createMemo(
+		() => `aisle-cell${props.grid.pendingEnable().has(`0-${props.col}`) ? ' pending-enable' : ''}`
 	);
 
 	return (
 		<>
 			{props.grid.aisleColumns().includes(props.col) ? (
 				props.row === 0 ? (
-					<td
-						class={aisleClass()}
-						rowSpan={10}
-						onClick={() => props.onClick(props.row, props.col)}
-					>
+					<td class={aisleClass()} rowSpan={10} onClick={() => props.onClick(props.row, props.col)}>
 						{i18n().grid.aisle}
 					</td>
 				) : null
@@ -62,7 +58,8 @@ export default function GridCell(props: Props) {
 				<td class={cellClasses()} onClick={() => props.onClick(props.row, props.col)}>
 					{props.cell || (
 						<span class="coord-label">
-							{String.fromCharCode(65 + props.row)}{props.col + 1}
+							{String.fromCharCode(65 + props.row)}
+							{props.col + 1}
 						</span>
 					)}
 				</td>

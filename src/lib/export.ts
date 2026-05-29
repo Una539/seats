@@ -73,7 +73,7 @@ export async function exportToXlsx(grid: Grid, filename: string = 'seats.xlsx') 
 			if (grid.isAisle(col)) {
 				// 过道列只在第一行时合并整个区域，避免重复操作
 				if (row === minDataRow) {
-					const startCol = col + 2;
+					const startCol = 11 - col;
 					const startRow = 1;
 					const endRow = dataRowCount;
 					worksheet.mergeCells(startRow, startCol, endRow, startCol);
@@ -92,7 +92,7 @@ export async function exportToXlsx(grid: Grid, filename: string = 'seats.xlsx') 
 				const isDisabled = grid.isDisabled(row, col);
 				const cellValue = grid.tableData[row][col];
 				if (!isDisabled) {
-					const excelCol = col + 2;
+					const excelCol = 11 - col;
 					const cell = worksheet.getCell(excelRow, excelCol);
 					if (cellValue) cell.value = cellValue;
 					cell.border = borderStyle;

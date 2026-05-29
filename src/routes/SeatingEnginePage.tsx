@@ -4,7 +4,7 @@
  * This file is part of seats.
  */
 
-import { createSignal } from 'solid-js';
+import { createSignal, onMount } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { t } from '$lib/i18n';
 import {
@@ -18,6 +18,7 @@ import {
 	type SeatingConfig,
 	type SeatingResult
 } from '$lib/stores/seatingEngine';
+import { examDataStore } from '$lib/stores/examData';
 import XlsxUploader from '$lib/components/engine/XlsxUploader';
 import GroupUploader from '$lib/components/engine/GroupUploader';
 import ConfigPanel from '$lib/components/engine/ConfigPanel';
@@ -53,6 +54,7 @@ export default function SeatingEnginePage() {
 	function handleDataReady(data: {
 		currentRows: (string | number | null)[][];
 		prevRows: (string | number | null)[][];
+		fileName: string;
 	}) {
 		setCurrentRows(data.currentRows);
 		setPrevRows(data.prevRows);
@@ -61,7 +63,30 @@ export default function SeatingEnginePage() {
 		setResult(null);
 		setExcludedNames([]);
 		setStudentNames(extractStudentNames(data.currentRows));
+		// 同步到全局数据层，供统计页面读取
+		examDataStore.loadData({
+			currentRows: data.currentRows,
+			prevRows: data.prevRows,
+			groupMap: groupMap(),
+			fileName: data.fileName
+		});
 	}
+
+	function handleGroupMapLoaded(map: Record<string, number>) {
+		setGroupMap(map);
+		examDataStore.updateGroupMap(map);
+	}
+
+	onMount(() => {
+		if (examDataStore.isReady()) {
+			setCurrentRows(examDataStore.currentRows());
+			setPrevRows(examDataStore.prevRows());
+			setGroupMap(examDataStore.groupMap());
+			setDataReady(true);
+			setError('');
+			setStudentNames(extractStudentNames(examDataStore.currentRows()));
+		}
+	});
 
 	function handleRun() {
 		if (!dataReady()) {
@@ -90,11 +115,14 @@ export default function SeatingEnginePage() {
 						<button class="nav-btn" onClick={() => navigate('/')}>
 							{i18n().engine.backToHome}
 						</button>
+						<button class="nav-btn" onClick={() => navigate('/stats')}>
+							→ {i18n().stats.pageTitle}
+						</button>
 						<span class="sidebar-title">{i18n().engine.pageTitle}</span>
 					</div>
 					<div class="engine-sidebar-body">
 						<XlsxUploader onDataReady={handleDataReady} />
-						<GroupUploader onGroupMapLoaded={setGroupMap} />
+						<GroupUploader onGroupMapLoaded={handleGroupMapLoaded} />
 						<ConfigPanel config={config()} onChange={setConfig} />
 						{dataReady() && studentNames().length > 0 && (
 							<PenaltySelector

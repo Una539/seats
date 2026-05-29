@@ -58,9 +58,7 @@ export default function PenaltySelector(props: Props) {
 				))}
 			</div>
 			<div class="meta" style={{ 'margin-top': '8px' }}>
-				<span class="meta-label">
-					{i18n().engine.penalty.selectedCount(props.selected.length)}
-				</span>
+				<span class="meta-label">{i18n().engine.penalty.selectedCount(props.selected.length)}</span>
 			</div>
 		</div>
 	);
