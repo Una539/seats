@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "type": "together",
+      "students": ["张明远", "李思涵"]
+    },
+    {
+      "type": "together",
+      "students": ["王晨曦", "赵宇航"]
+    },
+    {
+      "type": "together",
+      "students": ["陈雨桐", "刘子轩"]
+    },
+    {
+      "type": "together",
+      "students": ["杨欣悦", "黄俊杰"]
+    },
+    {
+      "type": "apart",
+      "students": ["张明远", "王晨曦"]
+    },
+    {
+      "type": "apart",
+      "students": ["陈雨桐", "杨欣悦"]
+    },
+    {
+      "type": "apart",
+      "students": ["周诗涵", "吴浩然"]
+    },
+    {
+      "type": "apart",
+      "students": ["余南溪", "潘皓月"]
+    }
+  ]
+}

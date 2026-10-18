@@ -1,137 +1,149 @@
-/*
- * Copyright (C) 2026 Una
- *
- * This file is part of seats.
- */
+import ExcelJS from 'exceljs'
+import type { ClassroomState } from './model'
 
-import * as ExcelJS from 'exceljs';
-import type { useSeatGrid } from './stores/useSeatGrid';
+export async function createWorkbook(
+  state: ClassroomState,
+): Promise<ExcelJS.Workbook> {
+  const { rows, cols } = state
+  if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 1 || cols < 1) {
+    throw new RangeError('教室行数和列数必须为正整数')
+  }
 
-/** useSeatGrid 返回类型的别名，用于类型约束 */
-type Grid = ReturnType<typeof useSeatGrid>;
+  const workbook = new ExcelJS.Workbook()
+  workbook.creator = 'Classroom'
+  const sheet = workbook.addWorksheet('座位表', {
+    views: [{ showGridLines: false }],
+    pageSetup: {
+      paperSize: 9,
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 1,
+      horizontalCentered: true,
+      verticalCentered: true,
+      margins: {
+        left: 0.25,
+        right: 0.25,
+        top: 0.3,
+        bottom: 0.3,
+        header: 0,
+        footer: 0,
+      },
+    },
+  })
 
-/**
- * 将当前座位网格导出为 XLSX 文件。
- * 自动识别有数据的行范围，并在表格中标注前后门、讲桌及过道位置。
- */
-export async function exportToXlsx(grid: Grid, filename: string = 'seats.xlsx') {
-	const workbook = new ExcelJS.Workbook();
-	const worksheet = workbook.addWorksheet('座位表');
+  const aisles = new Set(
+    state.verticalAisles
+      .filter((boundary) => Number.isInteger(boundary) && boundary > 0 && boundary < cols)
+      .map((boundary) => cols - boundary),
+  )
+  const seatColumns: number[] = []
+  const aisleColumns: number[] = []
+  // Outer columns keep the door and window labels outside the seating grid.
+  let column = 2
+  for (let displayCol = 0; displayCol < cols; displayCol += 1) {
+    seatColumns.push(column)
+    sheet.getColumn(column).width = 16
+    column += 1
+    if (aisles.has(displayCol + 1)) {
+      aisleColumns.push(column)
+      sheet.getColumn(column).width = 5
+      column += 1
+    }
+  }
+  const lastColumn = column
+  const firstSeatRow = 3
+  const lastSeatRow = firstSeatRow + rows - 1
+  const podiumRow = lastSeatRow + 2
+  sheet.getColumn(1).width = 6
+  sheet.getColumn(lastColumn).width = 6
 
-	/** 单元格统一边框样式 */
-	const borderStyle = {
-		top: { style: 'thin' as const },
-		left: { style: 'thin' as const },
-		bottom: { style: 'thin' as const },
-		right: { style: 'thin' as const }
-	};
+  sheet.mergeCells(1, 1, 1, lastColumn)
+  const title = sheet.getCell(1, 1)
+  title.value = '班级座位表（讲台视角）'
+  title.font = { name: '微软雅黑', size: 18, bold: true }
+  title.alignment = { horizontal: 'center', vertical: 'middle' }
+  sheet.getRow(1).height = 36
+  sheet.getRow(2).height = 24
+  for (const [labelColumn, label] of [[1, '门'], [lastColumn, '窗']] as const) {
+    const cell = sheet.getCell(2, labelColumn)
+    cell.value = label
+    cell.font = { name: '微软雅黑', size: 11, bold: true }
+    cell.alignment = { horizontal: 'center', vertical: 'middle' }
+  }
 
-	// 遍历网格，找出包含有效数据的最小和最大行号，以压缩导出范围
-	let minDataRow = 10;
-	let maxDataRow = -1;
-	for (let row = 0; row < 10; row++) {
-		for (let col = 0; col < 10; col++) {
-			if (!grid.isAisle(col)) {
-				const isDisabled = grid.isDisabled(row, col);
-				const cellValue = grid.tableData[row][col];
-				if (!isDisabled && cellValue) {
-					if (row < minDataRow) minDataRow = row;
-					if (row > maxDataRow) maxDataRow = row;
-				}
-			}
-		}
-	}
+  const names = new Map(state.students.map((student) => [student.id, student.name]))
+  const seats = new Map(state.seats.map((seat) => [`${seat.row}:${seat.col}`, seat]))
+  for (let displayRow = 0; displayRow < rows; displayRow += 1) {
+    const excelRow = firstSeatRow + displayRow
+    sheet.getRow(excelRow).height = 42
+    for (let displayCol = 0; displayCol < cols; displayCol += 1) {
+      const seat = seats.get(`${rows - 1 - displayRow}:${cols - 1 - displayCol}`)
+      const cell = sheet.getCell(excelRow, seatColumns[displayCol]!)
+      const enabled = seat?.enabled ?? false
+      cell.value = enabled && seat?.studentId != null
+        ? names.get(seat.studentId) ?? ''
+        : ''
+      cell.font = { name: '微软雅黑', size: 12 }
+      cell.alignment = {
+        horizontal: 'center',
+        vertical: 'middle',
+        wrapText: true,
+        textRotation: 0,
+      }
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: enabled ? 'FFFFFFFF' : 'FFD9D9D9' },
+      }
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF808080' } },
+        bottom: { style: 'thin', color: { argb: 'FF808080' } },
+        left: { style: 'thin', color: { argb: 'FF808080' } },
+        right: { style: 'thin', color: { argb: 'FF808080' } },
+      }
+    }
+  }
 
-	// 若无任何有效数据，则默认导出全部 10 行
-	if (maxDataRow === -1) {
-		minDataRow = 0;
-		maxDataRow = 9;
-	}
+  for (const aisleColumn of aisleColumns) {
+    sheet.mergeCells(firstSeatRow, aisleColumn, lastSeatRow, aisleColumn)
+    const cell = sheet.getCell(firstSeatRow, aisleColumn)
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } }
+    cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } }
+    cell.value = '过\n道'
+    cell.font = { name: '微软雅黑', size: 10, color: { argb: 'FF808080' } }
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
+  }
 
-	const dataRowCount = maxDataRow - minDataRow + 1;
-	/** 将网格行号映射为 Excel 行号（翻转顺序，使第 0 行显示在最上方） */
-	const rowToExcel = (row: number) => maxDataRow - row + 1;
+  sheet.getRow(lastSeatRow + 1).height = 12
+  sheet.mergeCells(podiumRow, 2, podiumRow, lastColumn - 1)
+  const podium = sheet.getCell(podiumRow, 2)
+  podium.value = '讲台'
+  podium.font = { name: '微软雅黑', size: 14, bold: true }
+  podium.alignment = { horizontal: 'center', vertical: 'middle' }
+  podium.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } }
+  sheet.getRow(podiumRow).height = 32
+  sheet.pageSetup.printArea = `A1:${sheet.getCell(podiumRow, lastColumn).address}`
+  return workbook
+}
 
-	// 在后门位置（Excel 第 1 行）标注文字
-	const backDoorCell = worksheet.getCell(1, 1);
-	backDoorCell.value = '后门';
-	backDoorCell.font = { bold: true, size: 14 };
-	backDoorCell.alignment = { vertical: 'middle', horizontal: 'center' };
-	backDoorCell.border = borderStyle;
-
-	// 在前门位置（Excel 最后一行）标注文字
-	const frontDoorCell = worksheet.getCell(dataRowCount, 1);
-	frontDoorCell.value = '前门';
-	frontDoorCell.font = { bold: true, size: 14 };
-	frontDoorCell.alignment = { vertical: 'middle', horizontal: 'center' };
-	frontDoorCell.border = borderStyle;
-
-	// 遍历有效数据行，写入座位姓名并处理过道合并单元格
-	for (let row = minDataRow; row <= maxDataRow; row++) {
-		const excelRow = rowToExcel(row);
-		for (let col = 0; col < 10; col++) {
-			if (grid.isAisle(col)) {
-				// 过道列只在第一行时合并整个区域，避免重复操作
-				if (row === minDataRow) {
-					const startCol = 11 - col;
-					const startRow = 1;
-					const endRow = dataRowCount;
-					worksheet.mergeCells(startRow, startCol, endRow, startCol);
-					const mergedCell = worksheet.getCell(startRow, startCol);
-					mergedCell.value = '过道';
-					mergedCell.font = { bold: true, color: { argb: 'FF000000' }, size: 14 };
-					mergedCell.alignment = { vertical: 'middle', horizontal: 'center' };
-					for (let r = startRow; r <= endRow; r++) {
-						for (let c = startCol; c <= startCol; c++) {
-							worksheet.getCell(r, c).border = borderStyle;
-						}
-					}
-				}
-			} else {
-				// 写入普通座位的姓名并应用边框样式
-				const isDisabled = grid.isDisabled(row, col);
-				const cellValue = grid.tableData[row][col];
-				if (!isDisabled) {
-					const excelCol = 11 - col;
-					const cell = worksheet.getCell(excelRow, excelCol);
-					if (cellValue) cell.value = cellValue;
-					cell.border = borderStyle;
-					cell.alignment = { vertical: 'middle', horizontal: 'center' };
-				}
-			}
-		}
-	}
-
-	// 在最后一行下方添加讲桌区域，合并整行
-	const deskRowNum = dataRowCount + 1;
-	const deskCell = worksheet.getCell(deskRowNum, 2);
-	deskCell.value = '讲桌';
-	deskCell.font = { bold: true, size: 16 };
-	deskCell.alignment = { vertical: 'middle', horizontal: 'center' };
-	worksheet.mergeCells(deskRowNum, 2, deskRowNum, 11);
-	for (let c = 2; c <= 11; c++) {
-		worksheet.getCell(deskRowNum, c).border = borderStyle;
-	}
-	worksheet.getRow(deskRowNum).height = 35;
-
-	// 统一设置所有行高和列宽
-	for (let r = 1; r <= deskRowNum; r++) {
-		worksheet.getRow(r).height = 40;
-	}
-	for (let c = 2; c <= 11; c++) {
-		worksheet.getColumn(c).width = 18;
-	}
-	worksheet.getColumn(1).width = 10;
-
-	// 生成 Blob 并触发浏览器下载
-	const buffer = await workbook.xlsx.writeBuffer();
-	const blob = new Blob([buffer], {
-		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-	});
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = filename;
-	a.click();
-	URL.revokeObjectURL(url);
+export async function downloadExcel(state: ClassroomState): Promise<void> {
+  const workbook = await createWorkbook(state)
+  const buffer = await workbook.xlsx.writeBuffer()
+  const blob = new Blob([new Uint8Array(buffer)], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = '班级座位表.xlsx'
+  link.style.display = 'none'
+  try {
+    document.body.appendChild(link)
+    link.click()
+  } finally {
+    link.remove()
+    // Allow the browser to start consuming the download before releasing its URL.
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
 }

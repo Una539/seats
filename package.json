@@ -1,36 +1,27 @@
 {
-	"name": "seats",
-	"license": "AGPL-3.0-or-later",
-	"private": true,
-	"version": "1.3.0",
-	"type": "module",
-	"scripts": {
-		"dev": "vite",
-		"build": "tsc && vite build",
-		"preview": "vite preview",
-		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write .",
-		"test": "node __tests__/run-all-tests.js",
-		"test:stores": "node __tests__/test-stores.test.js",
-		"test:export": "node __tests__/test-export.test.js",
-		"test:i18n": "node __tests__/test-i18n.test.js"
-	},
-	"devDependencies": {
-		"@eslint/compat": "^2.0.4",
-		"@eslint/js": "^10.0.1",
-		"@types/node": "^22",
-		"eslint": "^10.2.0",
-		"eslint-config-prettier": "^10.1.8",
-		"globals": "^17.4.0",
-		"prettier": "^3.8.1",
-		"typescript": "^6.0.2",
-		"typescript-eslint": "^8.58.1",
-		"vite": "^8.0.7",
-		"vite-plugin-solid": "^2.11.6"
-	},
-	"dependencies": {
-		"@solidjs/router": "^0.16.1",
-		"exceljs": "^4.4.0",
-		"solid-js": "^1.9.5"
-	}
+  "name": "classroom",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test model.test.ts preferences.test.ts",
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^24.13.3",
+    "svelte": "^5.57.0",
+    "svelte-check": "^4.7.6",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/noto-sans-sc": "^5.3.1",
+    "@lucide/svelte": "^1.58.0",
+    "exceljs": "^4.4.0"
+  }
 }
