@@ -20,6 +20,15 @@ pnpm preview
 
 测试使用 Node.js 22.18+（推荐 Node.js 24）的内置 TypeScript 支持。构建产物位于 `dist/`，可以部署到静态网站。ExcelJS 在首次导出时按需加载，不访问远程服务。
 
+## GitHub Pages 部署
+
+推送到 `main` 或手动运行 GitHub Actions 中的 `Deploy to GitHub Pages` 工作流，会自动安装依赖、检查类型、运行测试、构建并部署 `dist/`。
+
+- 仓库 **Settings → Pages → Build and deployment → Source** 应选择 **GitHub Actions**。
+- 当前自定义域名为 `gseats.unoflow.org`，由 `public/CNAME` 随构建发布；Pages 设置中的 Custom domain 也应填写此域名，并确认 DNS 仍指向 GitHub Pages。
+- Vite 使用相对资源路径，兼容自定义域名及 `/seats/` 子目录部署。
+- 如不再使用自定义域名，删除 `public/CNAME`，并清除 Pages 设置中的 Custom domain，使用 `https://una539.github.io/seats/`。
+
 ## 使用
 
 1. 导入 UTF-8 TXT 名单，每行一个姓名；空行会忽略，同名学生拥有独立 ID。再次导入会确认替换名单，并清空安排、保留布局。
